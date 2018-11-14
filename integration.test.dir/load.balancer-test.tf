@@ -17,12 +17,21 @@ module zero-param-test
 */
 
 
-module last-stable-release-test-0
+module load-balancer-test
 {
 ##############    source       = "github.com/devops4me/terraform-aws-vpc-subnets?ref=v0.1.0002"
     source       = ".."
-    in_vpc_cidr  = "10.234.56.0/24"
-    in_ecosystem = "${local.ecosystem_id}-00"
+    in_vpc_id    = "${ module.housing.out_vpc_id}"
+    in_ecosystem = "${local.ecosystem_id}"
+}
+
+
+module housing
+{
+    source       = "github.com/devops4me/terraform-aws-vpc-subnets"
+    version      = "v0.1.0002"
+    in_vpc_cidr  = "10.234.0.0/16"
+    in_ecosystem = "${local.ecosystem_id}"
 }
 
 

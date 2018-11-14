@@ -4,9 +4,9 @@
 ### [[resource]] aws_alb ###
 ### #################### ###
 
-resource "aws_alb" "alb"
+resource aws_alb alb
 {
-    name            = "applb-${var.in_ecosystem_id}"
+    name            = "applb-${ var.in_ecosystem }"
     security_groups = [ "${var.in_s_group_ids}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
     internal        = "true"
@@ -31,13 +31,13 @@ resource "aws_alb" "alb"
 ### [[resource]] aws_alb_target_group ###
 ### ################################# ###
 
-resource "aws_alb_target_group" "alb_targets"
+resource aws_alb_target_group alb_targets
 {
     count             = "1"
-    name     = "tg-${var.in_ecosystem_id}"
+    name     = "tg-${ var.in_ecosystem }"
     protocol = "HTTPS"
     port     = "443"
-    vpc_id   = "${var.in_vpc_id}"
+    vpc_id   = "${ var.in_vpc_id }"
     target_type = "ip"
 
     health_check
@@ -72,7 +72,7 @@ resource aws_alb_listener alb_listener
   load_balancer_arn = "${aws_alb.alb.arn}"
     port                = 443
     protocol            = "HTTPS"
-    certificate_arn     = "arn:aws:iam::215028532396:server-certificate/dev.aimbrain.internal-2019"
+    certificate_arn     = "arn:aws:iam::<<account-id>>:server-certificate/<<certificate-id>>"
     ssl_policy          = "ELBSecurityPolicy-2016-08"
 
 default_action {

@@ -53,22 +53,12 @@ variable in_ip_address_count
 }
 
 
-### ############################ ###
-### [[variable]] in_ecosystem_id ###
-### ############################ ###
+### ######################### ###
+### [[variable]] in_ecosystem ###
+### ######################### ###
 
-variable in_ecosystem_id
+variable in_ecosystem
 {
-    description = "Identifier binding all infrastructure components created for this ecosystem instance."
+    description = "The name of the class of ecosystem being built like kubernetes-cluster or rabbit-mq"
+    default     = "eco-system"
 }
-
-
-### ############################ ###
-### [[variable]] in_history_note ###
-### ############################ ###
-
-variable in_history_note
-{
-    description = "Note describing the whys and wherefores of this creation."
-}
-
