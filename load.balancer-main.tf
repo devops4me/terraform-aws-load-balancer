@@ -1,5 +1,4 @@
 
-
 ### #################### ###
 ### [[resource]] aws_alb ###
 ### #################### ###
@@ -7,7 +6,7 @@
 resource aws_alb alb
 {
     name            = "applb-${ var.in_ecosystem }"
-    security_groups = [ "${var.in_s_group_ids}" ]
+    security_groups = [ "${var.in_security_group_id}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
     internal        = "true"
 
@@ -66,10 +65,25 @@ resource aws_alb_target_group alb_targets
 ### [[resource]] aws_alb_listener ###
 ### ############################# ###
 
-resource aws_alb_listener alb_listener
+resource aws_alb_listener http_listener
 {
-  count             = "1"
-  load_balancer_arn = "${aws_alb.alb.arn}"
+    count             = "1"
+    load_balancer_arn = "${aws_alb.alb.arn}"
+    port                = 80
+    protocol            = "HTTP"
+
+default_action {
+    target_group_arn = "${element(aws_alb_target_group.alb_targets.*.arn, 0)}"
+    type = "forward"
+  }
+}
+
+
+/*
+resource aws_alb_listener https_listener
+{
+    count             = "1"
+    load_balancer_arn = "${aws_alb.alb.arn}"
     port                = 443
     protocol            = "HTTPS"
     certificate_arn     = "arn:aws:iam::<<account-id>>:server-certificate/<<certificate-id>>"
@@ -80,6 +94,7 @@ default_action {
     type = "forward"
   }
 }
+*/
 
 
 ### ########################################### ###

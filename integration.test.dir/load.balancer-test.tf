@@ -3,131 +3,179 @@
 ### [[test-module]] testing terraform-aws-load-balancer ###
 ### ################################################### ###
 
-locals
-{
-    ecosystem_id = "app-lb-test"
-}
-
-
-/*
-module zero-param-test
-{
-    source = "github.com/devops4me/terraform-aws-vpc-subnets"
-}
-*/
-
-
+# = ===
+# = Test the modern state-of-the-art AWS application load balancer by creating
+# = a number of ec2 instances configured with cloud config and set up to serve
+# = web pages using either the HTTP or HTTPS protocols.
+# =
+# = The ec2 instances are placed in a subnets across each of the region's
+# = availability zones and the security group is set to allow the appropriate
+# = traffic to pass through.
+# = ===
 module load-balancer-test
 {
-##############    source       = "github.com/devops4me/terraform-aws-vpc-subnets?ref=v0.1.0002"
-    source       = ".."
-    in_vpc_id    = "${ module.housing.out_vpc_id}"
-    in_ecosystem = "${local.ecosystem_id}"
+    source               = ".."
+    in_vpc_id            = "${ module.vpc-subnets.out_vpc_id }"
+    in_subnet_ids        = "${ module.vpc-subnets.out_subnet_ids }"
+    in_security_group_id = "${ module.security-group.out_security_group_id }"
+    in_ip_addresses      = "${ aws_instance.server.*.private_ip }"
+    in_ip_address_count  = 3
+    in_ecosystem         = "${ local.ecosystem_id }"
 }
 
 
-module housing
+# = ===
+# = This module creates a VPC and then allocates subnets in a round robin manner
+# = to each availability zone. For example if 8 subnets are required in a region
+# = that has 3 availability zones - 2 zones will hold 3 subnets and the 3rd two.
+# =
+# = Whenever and wherever public subnets are specified, this module knows to create
+# = an internet gateway and a route out to the net.
+# = ===
+module vpc-subnets
 {
-    source       = "github.com/devops4me/terraform-aws-vpc-subnets"
-    version      = "v0.1.0002"
-    in_vpc_cidr  = "10.234.0.0/16"
-    in_ecosystem = "${local.ecosystem_id}"
+    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
+    in_vpc_cidr            = "10.197.0.0/16"
+    in_num_private_subnets = 3
+    in_num_public_subnets  = 0
+    in_ecosystem           = "${local.ecosystem_id}"
+}
+
+
+# = ===
+# = The security group needs to allow ssh for troubleshooting logins
+# = and http plus https to test the load balancers viability against
+# = a fleet of web servers.
+# = ===
+module security-group
+{
+    source         = "github.com/devops4me/terraform-aws-security-group"
+    in_ingress     = [ "ssh", "http", "https" ]
+    in_vpc_id      = "${ module.vpc-subnets.out_vpc_id }"
+    in_use_default = "true"
+    in_ecosystem   = "${ local.ecosystem_id }"
+}
+
+
+locals
+{
+    ecosystem_id = "lb-test"
+}
+
+
+output dns_name{ value             = "${ module.load-balancer-test.out_dns_name}" }
+output public_ip_addresses{ value  = "${ aws_instance.server.*.public_ip }" }
+output private_ip_addresses{ value = "${ aws_instance.server.*.private_ip }" }
+
+
+## @todo - migrate the below to its own module
+## @todo - migrate the below to its own module
+## @todo - migrate the below to its own module
+## @todo - migrate the below to its own module
+## @todo - migrate the below to its own module
+
+/*
+resource aws_key_pair ssh
+{
+    key_name = "ubuntu-long-keypair"
+    public_key = "<<put-me-here-if-you-need-me-or-use-ssh_auth keys in cloud-config>>"
+}
+*/
+
+data template_file cloud_config
+{
+    template = "${file("${path.module}/cloud-config.yaml")}"
+}
+
+
+resource aws_instance server
+{
+    count = "3"
+
+    ami                    = "${ data.aws_ami.ubuntu-1804.id }"
+    instance_type          = "t2.micro"
+###############    key_name               = "${ aws_key_pair.ssh.id }"
+    vpc_security_group_ids = [ "${ module.security-group.out_security_group_id }" ]
+    subnet_id              = "${ element( module.vpc-subnets.out_subnet_ids, count.index ) }"
+    user_data              = "${ data.template_file.cloud_config.rendered }"
+
+    tags
+    {
+        Name   = "ec2-0${ ( count.index + 1 ) }-${ local.ecosystem_id }-${ module.ecosys.out_stamp }"
+        Class = "${ local.ecosystem_id }"
+        Instance = "${ local.ecosystem_id }-${ module.ecosys.out_stamp }"
+        Desc   = "This ec2 instance no.${ ( count.index + 1 ) } for ${ local.ecosystem_id } ${ module.ecosys.out_history_note }"
+    }
+
 }
 
 
 /*
-module vpc-subnets-test-1
-{
-    source       = "github.com/devops4me/terraform-aws-vpc-subnets"
-    version      = "v0.1.0002"
-    in_vpc_cidr  = "10.234.0.0/16"
-    in_ecosystem = "${local.ecosystem_id}-01"
-}
 
-module vpc-subnets-test-2
-{
-    source         =  "github.com/devops4me/terraform-aws-vpc-subnets"
-    version        =  "~> v0.1.0"
-    in_vpc_cidr    =  "10.15.0.0/18"
-    in_subnets_max =  "4"
-    in_ecosystem   =  "${local.ecosystem_id}-02"
-}
+ Write AWS AMI extractor terraform module which takes just two imputs
 
-module vpc-subnets-test-3
-{
-    source          = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr     = "10.63.0.0/20"
-    in_subnets_max  = "6"
-    in_ecosystem    = "${local.ecosystem_id}-03"
-}
+   1 - operating system name
+   2 - operating system version
 
-module vpc-subnets-test-4
-{
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr            = "10.255.0.0/21"
-    in_num_private_subnets = 8
-    in_num_public_subnets  = 7
-    in_subnets_max         = "7"
-    in_ecosystem           = "${local.ecosystem_id}-04"
-}
+  and returns the AWS AMI ID.
 
-module vpc-subnets-test-5
-{
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr            = "10.242.0.0/16"
-    in_num_private_subnets = 0
-    in_num_public_subnets  = 0
-    in_ecosystem           = "${local.ecosystem_id}-05"
-}
+ Set it up and test it for the below n operating systems going right back from 2010 to present day.
+ (Also setup alerter schedule for when new versions are released - keep it up-to-date).
 
-module vpc-subnets-test-6
-{
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr            = "10.243.0.0/16"
-    in_num_private_subnets = 0
-    in_ecosystem           = "${local.ecosystem_id}-06"
-}
+ The kickoff operating systems are
 
-module vpc-subnets-test-7
-{
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr           = "10.244.0.0/16"
-    in_num_public_subnets = 0
-    in_ecosystem          = "${local.ecosystem_id}-07"
-}
+   01 - ubuntu server
+   02 - windows server
+   03 - Container Linux (CoreOS) - Legacy
+   04 - Fedora CoreOS
+   05 - RedHat CoreOS (for OpenShift platform)
+   06 - RHEL (RedHat Enterprise Linux)
+   06 - CentOS (RedHat)
+   07 - OpenSUSE
+   08 - Oracle Linux
+   09 - Amazon Linux
+   10 - Android
+   11 - Mageia
+   12 - Gentoo
+   13 - Arch Linux
+   14 - ClearOS
+   15 - Slackware
+   16 - Fedora
+   17 - Debian
+   18 - 
+   19 - 
+   20 - 
+   2 - 
 
-module vpc-subnets-test-8
-{
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr            = "10.245.0.0/16"
-    in_num_private_subnets = 6
-    in_num_public_subnets  = 6
-    in_ecosystem           = "${local.ecosystem_id}-08"
-}
 
-module vpc-subnets-test-9
-{
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
-    in_vpc_cidr            = "10.31.0.0/22"
-    in_num_private_subnets = 2
-    in_num_public_subnets  = 8
-    in_subnets_max         = "5"
-    in_ecosystem           = "${local.ecosystem_id}-09"
-}
+ Advertise the AMI, CloudFront distribution, AWS ElasticSearch, Terraform Jenkins2 Docker Pipeline and SafeDB
 
-output subnet_ids_1{ value = "${module.vpc-subnets-test-1.out_subnet_ids}" }
-output private_subnet_ids_1{ value = "${module.vpc-subnets-test-1.out_private_subnet_ids}" }
-output public_subnet_ids_1{ value = "${module.vpc-subnets-test-1.out_public_subnet_ids}" }
-
-output subnet_ids_2{ value = "${module.vpc-subnets-test-6.out_subnet_ids}" }
-output private_subnet_ids_2{ value = "${module.vpc-subnets-test-6.out_private_subnet_ids}" }
-output public_subnet_ids_2{ value = "${module.vpc-subnets-test-6.out_public_subnet_ids}" }
-
-output subnet_ids_3{ value = "${module.vpc-subnets-test-7.out_subnet_ids}" }
-output private_subnet_ids_3{ value = "${module.vpc-subnets-test-7.out_private_subnet_ids}" }
-output public_subnet_ids_3{ value = "${module.vpc-subnets-test-7.out_public_subnet_ids}" }
-
-output subnet_ids_4{ value = "${module.vpc-subnets-test-9.out_subnet_ids}" }
-output private_subnet_ids_4{ value = "${module.vpc-subnets-test-9.out_private_subnet_ids}" }
-output public_subnet_ids_4{ value = "${module.vpc-subnets-test-9.out_public_subnet_ids}" }
 */
+
+data aws_ami ubuntu-1804
+{
+    most_recent = true
+
+    filter
+    {
+        name   = "name"
+        values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+    }
+
+    filter
+    {
+        name   = "virtualization-type"
+        values = [ "hvm" ]
+    }
+
+    owners = ["099720109477"]
+}
+
+### ################# ###
+### [[module]] ecosys ###
+### ################# ###
+
+module ecosys
+{
+    source = "github.com/devops4me/terraform-aws-stamps"
+}

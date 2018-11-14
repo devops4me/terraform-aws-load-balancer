@@ -10,14 +10,13 @@
 variable in_vpc_id {}
 
 
-### ########################### ###
-### [[variable]] in_s_group_ids ###
-### ########################### ###
+### ################################# ###
+### [[variable]] in_security_group_id ###
+### ################################# ###
 
-variable "in_s_group_ids"
+variable "in_security_group_id"
 {
     description = "ID of security group that constrains the flow of load balancer traffic."
-    type        = "list"
 }
 
 
@@ -38,7 +37,7 @@ variable "in_subnet_ids"
 
 variable in_ip_addresses
 {
-    description = "Here nips is a list of network interface ip addresses."
+    description = "The list of IP addresses (public or private) that the load balancer will round robin spray."
     type    = "list"
 }
 
@@ -49,7 +48,7 @@ variable in_ip_addresses
 
 variable in_ip_address_count
 {
-    description = "This load balancer module needs to know beforehand (due to a Terraform quirk) the number of IP addresses to that will be sent."
+    description = "Due to a Terraform quirk the count value must be known beforehand (at compile time so to speak)."
 }
 
 
