@@ -36,8 +36,8 @@ module vpc-subnets
 {
     source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
     in_vpc_cidr            = "10.197.0.0/16"
-    in_num_private_subnets = 3
-    in_num_public_subnets  = 0
+    in_num_private_subnets = 0
+    in_num_public_subnets  = 3
     in_ecosystem           = "${local.ecosystem_id}"
 }
 
@@ -74,27 +74,31 @@ output private_ip_addresses{ value = "${ aws_instance.server.*.private_ip }" }
 ## @todo - migrate the below to its own module
 ## @todo - migrate the below to its own module
 
-/*
-resource aws_key_pair ssh
-{
-    key_name = "ubuntu-long-keypair"
-    public_key = "<<put-me-here-if-you-need-me-or-use-ssh_auth keys in cloud-config>>"
-}
-*/
 
+# = ===
+# = Visit cloud-config.yaml and / or the cloud-init url to
+# = understand the setup of the web servers.
+# = ===
+# = https://cloudinit.readthedocs.io/en/latest/index.html
+# = ===
 data template_file cloud_config
 {
     template = "${file("${path.module}/cloud-config.yaml")}"
 }
 
 
+# = ===
+# = Visit cloud-config.yaml and / or the cloud-init url to
+# = understand the setup of the web servers.
+# = ===
+# = https://cloudinit.readthedocs.io/en/latest/index.html
+# = ===
 resource aws_instance server
 {
     count = "3"
 
     ami                    = "${ data.aws_ami.ubuntu-1804.id }"
     instance_type          = "t2.micro"
-###############    key_name               = "${ aws_key_pair.ssh.id }"
     vpc_security_group_ids = [ "${ module.security-group.out_security_group_id }" ]
     subnet_id              = "${ element( module.vpc-subnets.out_subnet_ids, count.index ) }"
     user_data              = "${ data.template_file.cloud_config.rendered }"

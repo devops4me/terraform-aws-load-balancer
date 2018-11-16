@@ -8,7 +8,7 @@ resource aws_alb alb
     name            = "applb-${ var.in_ecosystem }"
     security_groups = [ "${var.in_security_group_id}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
-    internal        = "true"
+    internal        = "false"
 
     enable_deletion_protection  = false
     load_balancer_type          = "application"
@@ -29,6 +29,58 @@ resource aws_alb alb
 ### ################################# ###
 ### [[resource]] aws_alb_target_group ###
 ### ################################# ###
+
+resource aws_alb_target_group alb_targets
+{
+    count    = "1"
+    name     = "tg-${ var.in_ecosystem }"
+    protocol = "HTTP"
+    port     = "80"
+    vpc_id   = "${ var.in_vpc_id }"
+    target_type = "ip"
+
+    health_check
+    {
+        healthy_threshold   = 3
+        unhealthy_threshold = 10
+        timeout             = 5
+        interval            = 10
+        path                = "/"
+        port                = 80
+        protocol            = "HTTP"
+    }
+
+    tags
+    {
+        Name   = "alb-tg-${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
+        Class = "${ var.in_ecosystem }"
+        Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
+        Desc   = "This alb http target group for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
+    }
+
+}
+
+
+### ############################# ###
+### [[resource]] aws_alb_listener ###
+### ############################# ###
+
+resource aws_alb_listener http_listener
+{
+    count             = "1"
+    load_balancer_arn = "${aws_alb.alb.arn}"
+    port                = 80
+    protocol            = "HTTP"
+
+    default_action
+    {
+        target_group_arn = "${element(aws_alb_target_group.alb_targets.*.arn, 0)}"
+        type = "forward"
+    }
+}
+
+
+/*
 
 resource aws_alb_target_group alb_targets
 {
@@ -60,26 +112,6 @@ resource aws_alb_target_group alb_targets
 
 }
 
-
-### ############################# ###
-### [[resource]] aws_alb_listener ###
-### ############################# ###
-
-resource aws_alb_listener http_listener
-{
-    count             = "1"
-    load_balancer_arn = "${aws_alb.alb.arn}"
-    port                = 80
-    protocol            = "HTTP"
-
-default_action {
-    target_group_arn = "${element(aws_alb_target_group.alb_targets.*.arn, 0)}"
-    type = "forward"
-  }
-}
-
-
-/*
 resource aws_alb_listener https_listener
 {
     count             = "1"
@@ -94,6 +126,7 @@ default_action {
     type = "forward"
   }
 }
+
 */
 
 
@@ -106,7 +139,7 @@ resource aws_lb_target_group_attachment connect
     count            = "${ var.in_ip_address_count }"
     target_group_arn = "${element(aws_alb_target_group.alb_targets.*.arn, 0)}"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
-    port             = 443
+    port             = 80
 }
 
 
