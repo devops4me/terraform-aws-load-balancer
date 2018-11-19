@@ -23,22 +23,21 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
     output dns_name{ value = "${ module.load-balancer.out_dns_name}" }
 
 
-## [Examples and Tests](test-vpc.subnets)
-
-**[This terraform module has runnable example integration tests](test-vpc.subnets)**. Read the instructions on how to clone the project and run the integration tests.
-
-
 ## Module Inputs
 
-| Input Variable             | Type    | Notes - Description                                           |
-|:-------------------------- |:-------:|:------------------------------------------------------------- |
+| Input Variable | Type | Notes - Description |
+|:-------------- |:----:|:------------------- |
 | **in_vpc_id** | String | The ID of the VPC containing all the back-end targets, subnets and security groups to route to. |
 | **in_security_group_id** | String | The security group must be configured to permit the type of traffic the load balancer is routing. |
 | **in_subnet_ids** | List | The IDs of the subnets that traffic will be routed to. **Important - traffic will not be routed to two or more subnets in the same availability zone.** |
+| **in_is_internal** | Boolean | If true the load balancer's DNS name is private - if false the DNS name will be externally addressable. |
+| **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. Note that if **in_is_internal** is true the IP addresses (and subnets) cannot be public. |
+| **in_ssl_certificate_id** | String | The ID of the SSL certificate living in the ACM (Amazon Certificate Manager) repository. |
+| **in_access_logs_bucket** | String | The **name of the S3 bucket** to which the load balancer will post access logs. |
 | **in_ecosystem** | String | the class name of the ecosystem being built here. |
 
-
 ---
+
 
 ## output variables
 
@@ -57,9 +56,13 @@ Here are the most popular **output variables** exported from this VPC and subnet
 **[This terraform module has runnable example integration tests](test-vpc.subnets)**. Read the instructions on how to clone the project and run the unit tests.
 
 
-
 ---
 
+## [Examples and Tests](integration.test.dir)
+
+**[This terraform module has runnable example integration tests](integration.test.dir)**. Read the instructions on how to clone the project and run the integration tests.
+
+---
 
 ## Inputs for the Application Load Balancer
 
@@ -124,7 +127,7 @@ The application load balancer can have many rules meaning we can route traffic t
 - the **request path (url** text after first sole forward slash)
 - the **host** that the request came from (info in http headers)
 
-
+---
 
 ## The Reverse Proxy Pattern | SSL Termination
 
@@ -133,6 +136,13 @@ This load balancer can implement the **reverse proxy pattern** by terminating SS
 As such the ID of the **ssl certificate** in AWS's certificate manager is typically provided to the load balancer's listener. These certificates are free and are automatically renewed which is highly attractive in contrast with the manual and costly nature of dealing with certificate authorities.
 
 
+### Goodbye nginx
+
+If you use nginx purely for SSL termination and/or reverse proxying then you should consider simplifying your infrastructure and employing a load balancer in its place.
+
+A load balancer will perform better, it is cheaper, more secure and can handle a much higher throughput without any degradation in performance.
+
+That said, nginx is ideal for more complex workloads like url rewriting, email routing, caching and authentication.
 
 
 
@@ -147,6 +157,7 @@ The AWS application load balancer is a (network) layer 7 load balancer which ope
 A layer 4 **network load balancer** does not open up the message thus making it faster, but the trade-off is it does not have the capabilities of a layer 7 load balancer.
 
 ---
+
 
 ## Load Balancer Access Logs | 5 minutes | 60 minutes | none
 
