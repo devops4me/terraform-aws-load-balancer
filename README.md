@@ -33,6 +33,8 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 | **in_is_internal** | Boolean | If true the load balancer's DNS name is private - if false the DNS name will be externally addressable. |
 | **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. **Note that if in_is_internal is true the IP addresses (and subnets) cannot be public**. |
 | **in_ssl_certificate_id** | String | The ID of the SSL certificate living in the ACM (Amazon Certificate Manager) repository. |
+| **in_listeners** | String | The front end listener configuration for this load balancer. |
+| **in_targets** | String | The back end target configuration for this load balancer. |
 | **in_access_logs_bucket** | String | The **name of the S3 bucket** to which the load balancer will post access logs. |
 | **in_ecosystem** | String | the class name of the ecosystem being built here. |
 
