@@ -3,6 +3,53 @@
 ################ Module [[[load balancers]]] Input Variables List. ########
 ################ ################################################# ########
 
+# = ===
+# = The collections map of common configuration for load balancer
+# = front end listeners and back-end targets.
+# = ===
+variable commons
+{
+    description = "Common load balancer front end listener and backend target configurations."
+    type = "map"
+
+    default
+    {
+
+	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
+	# < ~~~ protocol, port and health check location ~~~ >
+	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
+        web  = [ "HTTP",   80,   "/"      ]
+        ssl  = [ "HTTPS",  443,  "/"      ]
+        etcd = [ "HTTP",  2379, "/health" ]
+
+    }
+
+}
+
+### ######################### ###
+### [[variable]] in_listeners ###
+### ######################### ###
+
+variable in_listeners
+{
+    description = "The front end listener configuration for this load balancer."
+    type        = "list"
+    default     = [ "web" ]
+}
+
+
+### ####################### ###
+### [[variable]] in_targets ###
+### ####################### ###
+
+variable in_targets
+{
+    description = "The back end target configuration for this load balancer."
+    type        = "list"
+    default     = [ "web" ]
+}
+
+
 ### ###################### ###
 ### [[variable]] in_vpc_id ###
 ### ###################### ###

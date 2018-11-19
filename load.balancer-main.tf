@@ -26,17 +26,38 @@ resource aws_alb alb
 }
 
 
+### ############################# ###
+### [[resource]] aws_alb_listener ###
+### ############################# ###
+
+resource aws_alb_listener http_listener
+{
+    count = "${ length( var.in_listeners ) }"
+
+    load_balancer_arn = "${ aws_alb.alb.arn }"
+    port              = "${ element( var.commons[ var.in_listeners[ count.index ] ], 1 ) }"
+    protocol          = "${ element( var.commons[ var.in_listeners[ count.index ] ], 0 ) }"
+
+    default_action
+    {
+        target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, count.index ) }"
+        type = "forward"
+    }
+}
+
+
+
 ### ################################# ###
 ### [[resource]] aws_alb_target_group ###
 ### ################################# ###
 
 resource aws_alb_target_group alb_targets
 {
-    count    = "1"
-    name     = "tg-${ var.in_ecosystem }"
-    protocol = "HTTP"
-    port     = "80"
-    vpc_id   = "${ var.in_vpc_id }"
+    count       = "${ length( var.in_targets ) }"
+    name        = "tg-${ var.in_ecosystem }"
+    protocol    = "${ element( var.commons[ var.in_targets[ count.index ] ], 0 ) }"
+    port        = "${ element( var.commons[ var.in_targets[ count.index ] ], 1 ) }"
+    vpc_id      = "${ var.in_vpc_id }"
     target_type = "ip"
 
     health_check
@@ -45,9 +66,9 @@ resource aws_alb_target_group alb_targets
         unhealthy_threshold = 10
         timeout             = 5
         interval            = 10
-        path                = "/"
-        port                = 80
-        protocol            = "HTTP"
+        protocol            = "${ element( var.commons[ var.in_targets[ count.index ] ], 0 ) }"
+        port                = "${ element( var.commons[ var.in_targets[ count.index ] ], 1 ) }"
+        path                = "${ element( var.commons[ var.in_targets[ count.index ] ], 2 ) }"
     }
 
     tags
@@ -61,27 +82,29 @@ resource aws_alb_target_group alb_targets
 }
 
 
-### ############################# ###
-### [[resource]] aws_alb_listener ###
-### ############################# ###
-
-resource aws_alb_listener http_listener
+# = ===
+# = Note that the port here is always mapped to the port specified
+# = in the first backend target group.
+# = ===
+resource aws_lb_target_group_attachment connect
 {
-    count             = "1"
-    load_balancer_arn = "${aws_alb.alb.arn}"
-    port                = 80
-    protocol            = "HTTP"
-
-    default_action
-    {
-        target_group_arn = "${element(aws_alb_target_group.alb_targets.*.arn, 0)}"
-        type = "forward"
-    }
+    count            = "${ var.in_ip_address_count }"
+    target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
+    target_id        = "${ element( var.in_ip_addresses, count.index ) }"
+    port             = "${ element( var.commons[ var.in_targets[ 0 ] ], 1 ) }"
 }
 
 
-/*
+### ################# ###
+### [[module]] ecosys ###
+### ################# ###
 
+module ecosys
+{
+    source = "github.com/devops4me/terraform-aws-stamps"
+}
+
+/*
 resource aws_alb_target_group alb_targets
 {
     count             = "1"
@@ -128,26 +151,3 @@ default_action {
 }
 
 */
-
-
-### ########################################### ###
-### [[resource]] aws_lb_target_group_attachment ###
-### ########################################### ###
-
-resource aws_lb_target_group_attachment connect
-{
-    count            = "${ var.in_ip_address_count }"
-    target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
-    target_id        = "${ element( var.in_ip_addresses, count.index ) }"
-    port             = 80
-}
-
-
-### ################# ###
-### [[module]] ecosys ###
-### ################# ###
-
-module ecosys
-{
-    source = "github.com/devops4me/terraform-aws-stamps"
-}
