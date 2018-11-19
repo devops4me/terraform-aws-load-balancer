@@ -158,6 +158,27 @@ The move to a **serverless infrastructure** is an undeniable upwards trend and *
 
 Migrating towards load balancers and away from web servers is a step towards the serverless paradigm.
 
+## Port Mapping
+
+Load balancers can achieve port mapping between front-end listeners and back-end targets.
+
+An example is the **[etcd3 cluster](https://github.com/devops4me/terraform-aws-etcd3-cluster/blob/master/etcd3.cluster-main.tf)** that maps the **back-end etcd port 2379** to the **front-end listener port 80**.
+
+    module load-balancer
+    {
+        source               = "github.com/devops4me/terraform-aws-load-balancer"
+        in_vpc_id            = "${ module.vpc-subnets.out_vpc_id }"
+        in_subnet_ids        = "${ module.vpc-subnets.out_subnet_ids }"
+        in_security_group_id = "${ module.security-group.out_security_group_id }"
+        in_ip_addresses      = "${ aws_instance.node.*.private_ip }"
+        in_listeners         = [ "web"  ]
+        in_targets           = [ "etcd" ]
+        in_ecosystem         = "${ local.ecosystem_id }"
+    }
+
+The *in_listeners** defintion **web** is saying that the ubiquitous port 80 should be mapped to **etcd port 2379** as signaled by **in_targets**.
+
+
 ## Goodbye VPC Peering
 
 VPC peering allows services in the private subnets of different VPCs to talk to each other.
