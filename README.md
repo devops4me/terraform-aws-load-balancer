@@ -180,32 +180,6 @@ Now approximate the byte size of each line and then multiply out to determine ro
 - every **hour**
 
 
-
-
-## Load Balancer Module Inputs
-
-The load balancer needs to know
-
-- what security groups it can attach itself to
-- the subnets that it will post traffic to
-- the ID of the **SSL certificate** in Certificate Manager
-- the URL to which is will proxy traffic requests
-- the S3 bucket (and path) to post the **access logs** to
-
-
-## Load Balancer Module Output
-
-The load balancer's url is the only noteoworthy output. This is typically consumed by the **blue/green (route53) domain name** switching module.
-
-
-
-
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
-
-
 ### Contributing
 
 Bug reports and pull requests are welcome on GitHub at the https://github.com/devops4me/terraform-aws-vpc-subnets page. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
