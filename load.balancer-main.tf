@@ -137,7 +137,7 @@ default_action {
 resource aws_lb_target_group_attachment connect
 {
     count            = "${ var.in_ip_address_count }"
-    target_group_arn = "${element(aws_alb_target_group.alb_targets.*.arn, 0)}"
+    target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
     port             = 80
 }

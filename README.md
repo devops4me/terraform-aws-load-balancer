@@ -1,7 +1,7 @@
 
 # Application Load Balancer Module
 
-### Listeners (Front End) | Target Groups (Back End)
+### Front End Listeners | Back End Targets
 
 The AWS **application load balancer** module allows us to add one or more **front-end listeners** and one or more **back-end target groups** which can be ec2 instances, private IP addresses, auto-scaling groups or even other load balancers.
 
@@ -50,10 +50,6 @@ Here are the most popular **output variables** exported from this VPC and subnet
 **out_subnet_ids** | List of Strings | [ "subnet-545123498798345", "subnet-83507325124987" ] | list of **all private and public** subnet ids
 **out_private_subnet_ids** | List of Strings | [ "subnet-545123498798345", "subnet-83507325124987" ] | list of **private** subnet ids
 **out_public_subnet_ids** | List of Strings |  [ "subnet-945873408204034", "subnet-8940202943031" ] | list of **public** subnet ids
-
-## vpc subnets | module tests
-
-**[This terraform module has runnable example integration tests](test-vpc.subnets)**. Read the instructions on how to clone the project and run the unit tests.
 
 
 ---
@@ -129,6 +125,8 @@ The application load balancer can have many rules meaning we can route traffic t
 
 ---
 
+## Architectural Advice | Load Balancers
+
 ## The Reverse Proxy Pattern | SSL Termination
 
 This load balancer can implement the **reverse proxy pattern** by terminating SSL which is useful when backend services either cannot will not or should not work with SSL and/or manage SSL certificates within applications and containers.
@@ -136,7 +134,7 @@ This load balancer can implement the **reverse proxy pattern** by terminating SS
 As such the ID of the **ssl certificate** in AWS's certificate manager is typically provided to the load balancer's listener. These certificates are free and are automatically renewed which is highly attractive in contrast with the manual and costly nature of dealing with certificate authorities.
 
 
-### Goodbye nginx
+## Goodbye nginx
 
 If you use nginx purely for SSL termination and/or reverse proxying then you should consider simplifying your infrastructure and employing a load balancer in its place.
 
@@ -145,6 +143,22 @@ A load balancer will perform better, it is cheaper, more secure and can handle a
 That said, nginx is ideal for more complex workloads like url rewriting, email routing, caching and authentication.
 
 
+## Goodbye VPC Peering
+
+VPC peering allows services in the private subnets of different VPCs to talk to each other.
+
+VPC peering encourages the hardcoding of one (or two) VPC IDs and a number of subnet IDs. It also adds complexity due to the routing and subnet associations that must be made.
+
+**Consider using internal load balancers instead of VPC peering.** Services in private subnets of one VPC can talk to their peers in private subnets of another VPC through a load balancer without configuring VPC peering.
+
+## Goodbye Bastion Hosts
+
+Often proxying machines called bastion hosts are setup in a public subnet simply to allow connectivity to services in sister private subnets. IP tables and port forwarding are typically used to effect the connectivity.
+
+Consider replacing bastion hosts with a load balancer. An externally accessible load balancer can route to services in private subnets thus negating the need for clumsy EC2 instances that risk becoming single points of failure in your architecture.
+
+
+---
 
 ## Layer 7 Load Balancer vs Layer 4 Load Balancer
 
