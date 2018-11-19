@@ -31,7 +31,7 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 | **in_security_group_id** | String | The security group must be configured to permit the type of traffic the load balancer is routing. |
 | **in_subnet_ids** | List | The IDs of the subnets that traffic will be routed to. **Important - traffic will not be routed to two or more subnets in the same availability zone.** |
 | **in_is_internal** | Boolean | If true the load balancer's DNS name is private - if false the DNS name will be externally addressable. |
-| **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. Note that if **in_is_internal** is true the IP addresses (and subnets) cannot be public. |
+| **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. **Note that if in_is_internal is true the IP addresses (and subnets) cannot be public**. |
 | **in_ssl_certificate_id** | String | The ID of the SSL certificate living in the ACM (Amazon Certificate Manager) repository. |
 | **in_access_logs_bucket** | String | The **name of the S3 bucket** to which the load balancer will post access logs. |
 | **in_ecosystem** | String | the class name of the ecosystem being built here. |
@@ -136,12 +136,25 @@ As such the ID of the **ssl certificate** in AWS's certificate manager is typica
 
 ## Goodbye nginx
 
-If you use nginx purely for SSL termination and/or reverse proxying then you should consider simplifying your infrastructure and employing a load balancer in its place.
+If you use nginx **only for SSL termination and/or reverse proxying** you should consider replacing it with an **application load balancer**. (Note that this also applies to the likes of Apache2 and WeBrick(Ruby).
 
-A load balancer will perform better, it is cheaper, more secure and can handle a much higher throughput without any degradation in performance.
+A load balancer will perform better, is cheaper, simpler, more secure and inherently super scaleable. They scale to higher throughputs and loads without any performance degradation and they take the headaches of maintenance, upgrades, security and deployment off your shoulders.
+
+AWS load balancers **can write access logs into an S3 bucket** further making the case to migrate away from traditional web servers.
 
 That said, nginx is ideal for more complex workloads like url rewriting, email routing, caching and authentication.
 
+## Serverless Infrastructure Pattern
+
+The move to a **serverless infrastructure** is an undeniable upwards trend and **replacing traditional webservers with load balancers** achieves just that. Serverless comes into play when you use
+
+- EKS (elastic kubernetes service)
+- the managed AWS elasticsearch service
+- RDS (MySQL and/or Postgres)  in the AWS cloud
+- AWS Lambda
+- cloud services like email (SES), DNS (Route53) and storage (S3)
+
+Migrating towards load balancers and away from web servers is a step towards the serverless paradigm.
 
 ## Goodbye VPC Peering
 
