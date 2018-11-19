@@ -8,16 +8,16 @@ resource aws_alb alb
     name            = "applb-${ var.in_ecosystem }"
     security_groups = [ "${var.in_security_group_id}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
-    internal        = "false"
+    internal        = "${ var.in_is_internal ? "true" : "false" }"
 
-    enable_deletion_protection  = false
-    load_balancer_type          = "application"
-    idle_timeout                = 60
-    ip_address_type             = "ipv4"  # use either ipv4 or dualstack (must specify subnets with an associated IPv6 CIDR block)
+    enable_deletion_protection = false
+    load_balancer_type         = "application"
+    idle_timeout               = 60
+    ip_address_type            = "ipv4"  # either ipv4 or dualstack (for both IPv4 and IPv6)
 
     tags
     {
-        Name   = "alb-${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
+        Name   = "alb-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
         Class = "${ var.in_ecosystem }"
         Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
         Desc   = "This app load balancer for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
@@ -32,11 +32,11 @@ resource aws_alb alb
 
 resource aws_alb_listener http_listener
 {
-    count = "${ length( var.in_listeners ) }"
+    count = "${ length( var.in_front_end ) }"
 
     load_balancer_arn = "${ aws_alb.alb.arn }"
-    port              = "${ element( var.commons[ var.in_listeners[ count.index ] ], 1 ) }"
-    protocol          = "${ element( var.commons[ var.in_listeners[ count.index ] ], 0 ) }"
+    port              = "${ element( var.commons[ var.in_front_end[ count.index ] ], 1 ) }"
+    protocol          = "${ element( var.commons[ var.in_front_end[ count.index ] ], 0 ) }"
 
     default_action
     {
@@ -46,17 +46,16 @@ resource aws_alb_listener http_listener
 }
 
 
-
 ### ################################# ###
 ### [[resource]] aws_alb_target_group ###
 ### ################################# ###
 
 resource aws_alb_target_group alb_targets
 {
-    count       = "${ length( var.in_targets ) }"
+    count       = "${ length( var.in_back_end ) }"
     name        = "tg-${ var.in_ecosystem }"
-    protocol    = "${ element( var.commons[ var.in_targets[ count.index ] ], 0 ) }"
-    port        = "${ element( var.commons[ var.in_targets[ count.index ] ], 1 ) }"
+    protocol    = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
+    port        = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
     vpc_id      = "${ var.in_vpc_id }"
     target_type = "ip"
 
@@ -66,9 +65,9 @@ resource aws_alb_target_group alb_targets
         unhealthy_threshold = 10
         timeout             = 5
         interval            = 10
-        protocol            = "${ element( var.commons[ var.in_targets[ count.index ] ], 0 ) }"
-        port                = "${ element( var.commons[ var.in_targets[ count.index ] ], 1 ) }"
-        path                = "${ element( var.commons[ var.in_targets[ count.index ] ], 2 ) }"
+        protocol            = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
+        port                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
+        path                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 2 ) }"
     }
 
     tags
@@ -91,7 +90,7 @@ resource aws_lb_target_group_attachment connect
     count            = "${ var.in_ip_address_count }"
     target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
-    port             = "${ element( var.commons[ var.in_targets[ 0 ] ], 1 ) }"
+    port             = "${ element( var.commons[ var.in_back_end[ 0 ] ], 1 ) }"
 }
 
 

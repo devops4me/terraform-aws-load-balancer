@@ -17,6 +17,8 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
         in_security_group_id = "${ module.security-group.out_security_group_id }"
         in_ip_addresses      = "${ aws_instance.server.*.private_ip }"
         in_ip_address_count  = 3
+        in_front_end         = [ "web"  ]
+        in_back_end          = [ "etcd" ]
         in_ecosystem         = "${ local.ecosystem_id }"
     }
 
@@ -33,8 +35,8 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 | **in_is_internal** | Boolean | If true the load balancer's DNS name is private - if false the DNS name will be externally addressable. |
 | **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. **Note that if in_is_internal is true the IP addresses (and subnets) cannot be public**. |
 | **in_ssl_certificate_id** | String | The ID of the SSL certificate living in the ACM (Amazon Certificate Manager) repository. |
-| **in_listeners** | String | The front end listener configuration for this load balancer. |
-| **in_targets** | String | The back end target configuration for this load balancer. |
+| **in_front_end** | List | List of front end listener configurations for this load balancer like web (for http port 80) and ssl (for https port 443).  |
+| **in_back_end** | List | List of back end target configuration for this load balancer **like etcd (for http port 2379)**, web (for http port 80) and ssl (for https port 443). |
 | **in_access_logs_bucket** | String | The **name of the S3 bucket** to which the load balancer will post access logs. |
 | **in_ecosystem** | String | the class name of the ecosystem being built here. |
 
@@ -171,12 +173,12 @@ An example is the **[etcd3 cluster](https://github.com/devops4me/terraform-aws-e
         in_subnet_ids        = "${ module.vpc-subnets.out_subnet_ids }"
         in_security_group_id = "${ module.security-group.out_security_group_id }"
         in_ip_addresses      = "${ aws_instance.node.*.private_ip }"
-        in_listeners         = [ "web"  ]
-        in_targets           = [ "etcd" ]
+        in_front_end         = [ "web"  ]
+        in_back_end          = [ "etcd" ]
         in_ecosystem         = "${ local.ecosystem_id }"
     }
 
-The *in_listeners** defintion **web** is saying that the ubiquitous port 80 should be mapped to **etcd port 2379** as signaled by **in_targets**.
+The *in_front_end** defintion **web** is saying that the ubiquitous port 80 should be mapped to **etcd port 2379** as signaled by **in_back_end**.
 
 
 ## Goodbye VPC Peering

@@ -27,10 +27,10 @@ variable commons
 }
 
 ### ######################### ###
-### [[variable]] in_listeners ###
+### [[variable]] in_front_end ###
 ### ######################### ###
 
-variable in_listeners
+variable in_front_end
 {
     description = "The front end listener configuration for this load balancer."
     type        = "list"
@@ -38,15 +38,26 @@ variable in_listeners
 }
 
 
-### ####################### ###
-### [[variable]] in_targets ###
-### ####################### ###
+### ######################## ###
+### [[variable]] in_back_end ###
+### ######################## ###
 
-variable in_targets
+variable in_back_end
 {
     description = "The back end target configuration for this load balancer."
     type        = "list"
     default     = [ "web" ]
+}
+
+
+### ########################### ###
+### [[variable]] in_is_internal ###
+### ########################### ###
+
+variable in_is_internal
+{
+    description = "If true the load balancer can be accessed externally and has a public IP address."
+    default     = true
 }
 
 
