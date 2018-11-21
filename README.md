@@ -33,7 +33,7 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 | **in_security_group_id** | String | The security group must be configured to permit the type of traffic the load balancer is routing. A **504 Gateway Time-out** error from your browser means a missing **security group rule** is blocking the traffic. |
 | **in_subnet_ids** | List | Use public subnets for an externally accessible front-end even when the back-end targets are in private subnets. Use private subnets for internal load balancers. The IDs of the subnets that traffic will be routed to. **Important - traffic will not be routed to two or more subnets in the same availability zone.** |
 | **in_is_internal** | Boolean | If true the load balancer's DNS name is private - if false the DNS name will be externally addressable. |
-| **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. **Note that if in_is_internal is true the IP addresses (and subnets) cannot be public**. |
+| **in_ip_addresses** | List | List of **private or public IP addresses** that the **load balancer's back-end** will route traffic to. If **internal [ in_is_internal = true ]**, then only private IP addresses **inside private subnets*** can be specified. |
 | **in_ssl_certificate_id** | String | The ID of the SSL certificate living in the ACM (Amazon Certificate Manager) repository. |
 | **in_front_end** | List | List of front end listener configurations for this load balancer like web (for http port 80) and ssl (for https port 443).  |
 | **in_back_end** | List | List of back end target configuration for this load balancer **like etcd (for http port 2379)**, web (for http port 80) and ssl (for https port 443). |
