@@ -13,7 +13,7 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
     {
         source               = "github.com/devops4me/terraform-aws-load-balancer"
         in_vpc_id            = "${ module.vpc-subnets.out_vpc_id }"
-        in_subnet_ids        = "${ module.vpc-subnets.out_subnet_ids }"
+        in_subnet_ids        = "${ module.vpc-subnets.out_public_subnet_ids }"
         in_security_group_id = "${ module.security-group.out_security_group_id }"
         in_ip_addresses      = "${ aws_instance.server.*.private_ip }"
         in_ip_address_count  = 3
@@ -30,8 +30,8 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 | Input Variable | Type | Notes - Description |
 |:-------------- |:----:|:------------------- |
 | **in_vpc_id** | String | The ID of the VPC containing all the back-end targets, subnets and security groups to route to. |
-| **in_security_group_id** | String | The security group must be configured to permit the type of traffic the load balancer is routing. |
-| **in_subnet_ids** | List | The IDs of the subnets that traffic will be routed to. **Important - traffic will not be routed to two or more subnets in the same availability zone.** |
+| **in_security_group_id** | String | The security group must be configured to permit the type of traffic the load balancer is routing. A **504 Gateway Time-out** error from your browser means a missing **security group rule** is blocking the traffic. |
+| **in_subnet_ids** | List | Use public subnets for an externally accessible front-end even when the back-end targets are in private subnets. Use private subnets for internal load balancers. The IDs of the subnets that traffic will be routed to. **Important - traffic will not be routed to two or more subnets in the same availability zone.** |
 | **in_is_internal** | Boolean | If true the load balancer's DNS name is private - if false the DNS name will be externally addressable. |
 | **in_ip_addresses** | List | List of private or public IP addresses the load balancer will route traffic to at the backend. **Note that if in_is_internal is true the IP addresses (and subnets) cannot be public**. |
 | **in_ssl_certificate_id** | String | The ID of the SSL certificate living in the ACM (Amazon Certificate Manager) repository. |
@@ -42,6 +42,26 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 
 ---
 
+## Important Advice | Public or Private Subnets
+
+Use **public subnet ids** even when the **back-end targets** are in **private subnets** if you want a **public facing load-balancer front-end**. From the browser the load-balancer will just hang if you have used private subnets because you can't connect to a service in private subnets from the outside world.
+
+The **vpc-network** module will provide the correct infrastructure to ensure services in private subnets can connect, via a NAT gateway and routes, to the internet.
+
+If you desire an internal load balancer then use private subnet IDs. Your load balancer will be available through a VPN or bastion host, and it will be **accessible to services in any VPCs for the same account** without the need for a peering connection.
+
+### Subnets in the same availability zone
+
+Load balancers will error saying that traffic will not be routed to two or more subnets in the same availability zone if that is what has been provided.
+
+
+## 504 Gateway Time-out | Security Group
+
+A **504 Gateway Time-out** error from your browser means that a **security group is blocking your application load-balancer** from initiating a connection using a given protocol on a given port.
+
+Fix it by allowing **all-traffic** through then narrow the gap until you discover the missing security group rule.
+
+---
 
 ## output variables
 
