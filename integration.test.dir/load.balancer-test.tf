@@ -15,8 +15,8 @@
 module load-balancer-test
 {
     source               = ".."
-    in_vpc_id            = "${ module.vpc-subnets.out_vpc_id }"
-    in_subnet_ids        = "${ module.vpc-subnets.out_subnet_ids }"
+    in_vpc_id            = "${ module.vpc-network.out_vpc_id }"
+    in_subnet_ids        = "${ module.vpc-network.out_subnet_ids }"
     in_security_group_id = "${ module.security-group.out_security_group_id }"
     in_ip_addresses      = "${ aws_instance.server.*.private_ip }"
     in_ip_address_count  = 3
@@ -32,9 +32,9 @@ module load-balancer-test
 # = Whenever and wherever public subnets are specified, this module knows to create
 # = an internet gateway and a route out to the net.
 # = ===
-module vpc-subnets
+module vpc-network
 {
-    source                 = "github.com/devops4me/terraform-aws-vpc-subnets"
+    source                 = "github.com/devops4me/terraform-aws-vpc-network"
     in_vpc_cidr            = "10.197.0.0/16"
     in_num_private_subnets = 0
     in_num_public_subnets  = 3
@@ -51,7 +51,7 @@ module security-group
 {
     source         = "github.com/devops4me/terraform-aws-security-group"
     in_ingress     = [ "ssh", "http", "https" ]
-    in_vpc_id      = "${ module.vpc-subnets.out_vpc_id }"
+    in_vpc_id      = "${ module.vpc-network.out_vpc_id }"
     in_use_default = "true"
     in_ecosystem   = "${ local.ecosystem_id }"
 }
@@ -100,7 +100,7 @@ resource aws_instance server
     ami                    = "${ data.aws_ami.ubuntu-1804.id }"
     instance_type          = "t2.micro"
     vpc_security_group_ids = [ "${ module.security-group.out_security_group_id }" ]
-    subnet_id              = "${ element( module.vpc-subnets.out_subnet_ids, count.index ) }"
+    subnet_id              = "${ element( module.vpc-network.out_subnet_ids, count.index ) }"
     user_data              = "${ data.template_file.cloud_config.rendered }"
 
     tags

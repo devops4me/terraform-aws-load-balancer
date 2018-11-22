@@ -12,8 +12,8 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
     module load-balancer
     {
         source               = "github.com/devops4me/terraform-aws-load-balancer"
-        in_vpc_id            = "${ module.vpc-subnets.out_vpc_id }"
-        in_subnet_ids        = "${ module.vpc-subnets.out_public_subnet_ids }"
+        in_vpc_id            = "${ module.vpc-network.out_vpc_id }"
+        in_subnet_ids        = "${ module.vpc-network.out_public_subnet_ids }"
         in_security_group_id = "${ module.security-group.out_security_group_id }"
         in_ip_addresses      = "${ aws_instance.server.*.private_ip }"
         in_ip_address_count  = 3
@@ -189,8 +189,8 @@ An example is the **[etcd3 cluster](https://github.com/devops4me/terraform-aws-e
     module load-balancer
     {
         source               = "github.com/devops4me/terraform-aws-load-balancer"
-        in_vpc_id            = "${ module.vpc-subnets.out_vpc_id }"
-        in_subnet_ids        = "${ module.vpc-subnets.out_subnet_ids }"
+        in_vpc_id            = "${ module.vpc-network.out_vpc_id }"
+        in_subnet_ids        = "${ module.vpc-network.out_subnet_ids }"
         in_security_group_id = "${ module.security-group.out_security_group_id }"
         in_ip_addresses      = "${ aws_instance.node.*.private_ip }"
         in_front_end         = [ "web"  ]
@@ -254,7 +254,7 @@ Now approximate the byte size of each line and then multiply out to determine ro
 
 ### Contributing
 
-Bug reports and pull requests are welcome on GitHub at the https://github.com/devops4me/terraform-aws-vpc-subnets page. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at the https://github.com/devops4me/terraform-aws-vpc-network page. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 License
 -------
