@@ -151,7 +151,7 @@ resource aws_lb_target_group_attachment connect
 ### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
 ###    count            = "${ var.in_ip_address_count }"
 ###    count            = "${ length( var.in_ip_addresses ) }"
-    count            = ${ local.fixme_count }
+    count            = "${ local.fixme_count }"
 
     target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
