@@ -83,7 +83,7 @@ resource aws_alb_listener http_listener
 resource aws_alb_target_group alb_targets
 {
     count       = "${ length( var.in_back_end ) }"
-    name        = "${ var.in_back_end[ count.index ] }-target-group-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }"
+    name        = "tg-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }-${ var.in_back_end[ count.index ] }"
     protocol    = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
     port        = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
     vpc_id      = "${ var.in_vpc_id }"
@@ -102,7 +102,7 @@ resource aws_alb_target_group alb_targets
 
     tags
     {
-        Name   = "${ var.in_back_end[ count.index ] }-target-group-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }"
+        Name   = "target-group-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }-${ var.in_back_end[ count.index ] }"
         Class = "${ var.in_ecosystem }"
         Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
         Desc   = "This load balancer backend targeting ${ element( var.commons[ var.in_back_end[ count.index ] ], 3 ) } traffic for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
