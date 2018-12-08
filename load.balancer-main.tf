@@ -110,16 +110,7 @@ resource aws_alb_target_group alb_targets
 
 }
 
-locals
-{
-    fixme_count = "${ length( var.in_ip_addresses ) }"
-}
 
-
-# = ===
-# = Note that the port here is always mapped to the port specified
-# = in the first backend target group.
-# = ===
 /*
  | --
  | -- This resource relates to an EC2 instance or even a service
@@ -134,24 +125,14 @@ locals
  | -- This means that we cannot use the sensible length function on
  | -- a list of private IP addresses to determine the count.
  | --
- | --      count = "${ length( var.in_ip_addresses ) }"
+ | --     count = "${ length( var.in_ip_addresses ) }"
  | --
- | --
- | -- Setting "rabbitmq" at the back-end and "web" at the front end means
- | -- that clients can call http://rabbitmq.example.com/api and it will be
- | -- translated to http://rabbitmq.example.com:15672/api
- | --
- | -- Notice the interface on port 80 and the implementation on 15672.
+ | -- We have to break normal form with an unnecessary variable.
  | --
 */
 resource aws_lb_target_group_attachment connect
 {
-### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
-### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
-### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
-###    count            = "${ var.in_ip_address_count }"
-###    count            = "${ length( var.in_ip_addresses ) }"
-    count            = "${ local.fixme_count }"
+    count            = "${ var.in_ip_address_count }"
 
     target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
