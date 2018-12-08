@@ -17,7 +17,7 @@
 */
 resource aws_alb alb
 {
-    name = "load-balancer-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
+    name            = "applb-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
     security_groups = [ "${var.in_security_group_id}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
     internal        = "${ var.in_is_internal ? "true" : "false" }"
