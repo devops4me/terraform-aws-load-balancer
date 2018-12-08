@@ -18,9 +18,11 @@ variable commons
 	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
 	# < ~~~ protocol, port and health check location ~~~ >
 	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
-        web  = [ "HTTP",   80,   "/"      ]
-        ssl  = [ "HTTPS",  443,  "/"      ]
-        etcd = [ "HTTP",  2379, "/health" ]
+
+        web      = [ "HTTP",   80,   "/"      ]
+        ssl      = [ "HTTPS",  443,  "/"      ]
+        etcd     = [ "HTTP",  2379, "/health" ]
+        rabbitmq = [ "HTTP",  15672, "/api" ]
 
     }
 
