@@ -1,11 +1,23 @@
 
-### #################### ###
-### [[resource]] aws_alb ###
-### #################### ###
-
+/*
+ | --
+ | -- Listeners are the front-end (ears) whilst target groups are the
+ | -- back-end of our load balancer setup.
+ | --
+ | -- This highly reusable module allows one t configure any number of
+ | -- listeners and targets each with words like "etcd" and "rabbitmq".
+ | --
+ | -- At its architectural heart the application load balancer is designed
+ | -- to separate interface from implementation and it does this serenely
+ | -- because it operates at the network layer 4.
+ | --
+ | -- This is in contrast to a network load balancer which operates
+ | -- at the network layer 7.
+ | --
+*/
 resource aws_alb alb
 {
-    name            = "applb-${ var.in_ecosystem }"
+    name = "load-balancer-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
     security_groups = [ "${var.in_security_group_id}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
     internal        = "${ var.in_is_internal ? "true" : "false" }"
@@ -17,7 +29,7 @@ resource aws_alb alb
 
     tags
     {
-        Name   = "alb-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
+        Name = "load-balancer-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
         Class = "${ var.in_ecosystem }"
         Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
         Desc   = "This app load balancer for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
@@ -26,10 +38,20 @@ resource aws_alb alb
 }
 
 
-### ############################# ###
-### [[resource]] aws_alb_listener ###
-### ############################# ###
-
+/*
+ | --
+ | -- Listeners are the front-end (ears) of our load balancer setup which
+ | -- is designed to separate interface from implementation.
+ | --
+ | -- We can demand a "ssl" front end listener (with an SSL certificate)
+ | -- accepting connections on port 443 and route its traffic to a
+ | -- plaintext etcd key-value store listening on port 2379.
+ | --
+ | -- This SSL front-end and plaintext HTTP back-end can be achieved
+ | -- because the application load balancer (alb) operates at the network
+ | -- layer 4 (in contrast to NLB operating at layer 7).
+ | --
+*/
 resource aws_alb_listener http_listener
 {
     count = "${ length( var.in_front_end ) }"
@@ -46,14 +68,22 @@ resource aws_alb_listener http_listener
 }
 
 
-### ################################# ###
-### [[resource]] aws_alb_target_group ###
-### ################################# ###
-
+/*
+ | --
+ | -- Target groups are the back-end of our load balancer which is designed
+ | -- to separate interface from implementation.
+ | --
+ | -- Setting "rabbitmq" at the back-end and "web" at the front end means
+ | -- that clients can call http://rabbitmq.example.com/api and it will be
+ | -- translated to http://rabbitmq.example.com:15672/api
+ | --
+ | -- Notice the interface on port 80 and the implementation on 15672.
+ | --
+*/
 resource aws_alb_target_group alb_targets
 {
     count       = "${ length( var.in_back_end ) }"
-    name        = "tg-${ var.in_ecosystem }"
+    name        = "${ var.in_back_end[ count.index ] }-target-group-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }"
     protocol    = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
     port        = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
     vpc_id      = "${ var.in_vpc_id }"
@@ -72,10 +102,10 @@ resource aws_alb_target_group alb_targets
 
     tags
     {
-        Name   = "alb-tg-${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
+        Name   = "${ var.in_back_end[ count.index ] }-target-group-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }"
         Class = "${ var.in_ecosystem }"
         Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
-        Desc   = "This alb http target group for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
+        Desc   = "This load balancer backend targeting ${ element( var.commons[ var.in_back_end[ count.index ] ], 3 ) } traffic for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
     }
 
 }
@@ -87,7 +117,12 @@ resource aws_alb_target_group alb_targets
 # = ===
 resource aws_lb_target_group_attachment connect
 {
-    count            = "${ var.in_ip_address_count }"
+### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
+### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
+### Does bug exist where count value demanded at compile time - if works DELete var from -variables.tf and README
+###    count            = "${ var.in_ip_address_count }"
+    count            = "${ length( var.in_ip_addresses ) }"
+
     target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
     port             = "${ element( var.commons[ var.in_back_end[ 0 ] ], 1 ) }"

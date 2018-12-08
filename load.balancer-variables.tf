@@ -15,15 +15,15 @@ variable commons
     default
     {
 
-	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
-	# < ~~~ protocol, port and health check location ~~~ >
-	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
+	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
+	# < ~~~ protocol, port, health url and description ~~~ >
+	# < ~~~ ------------------------------------------ ~~~ >
 
-        web      = [ "HTTP",     80, "/"       ]
-        ssl      = [ "HTTPS",   443, "/"       ]
-        etcd     = [ "HTTP",   2379, "/health" ]
-        rabbitmq = [ "HTTP",  15672, "/#"      ]
-        rmq-ssl  = [ "HTTPS", 15671, "/#"      ]
+        web      = [ "HTTP",     80, "/",       "http port 80"        ]
+        ssl      = [ "HTTPS",   443, "/",       "ssl (tls) port 443"  ]
+        etcd     = [ "HTTP",   2379, "/health", "etcd port 2379"      ]
+        rabbitmq = [ "HTTP",  15672, "/#",      "rabbitmq port 15672" ]
+        rmq-ssl  = [ "HTTPS", 15671, "/#",      "rmq ssl port 15671"  ]
 
     }
 
