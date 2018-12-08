@@ -83,7 +83,7 @@ resource aws_alb_listener http_listener
 resource aws_alb_target_group alb_targets
 {
     count       = "${ length( var.in_back_end ) }"
-    name        = "tg-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }-${ var.in_back_end[ count.index ] }"
+    name        = "tg-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }"
     protocol    = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
     port        = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
     vpc_id      = "${ var.in_vpc_id }"
