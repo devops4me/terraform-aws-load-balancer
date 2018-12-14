@@ -23,7 +23,7 @@ resource aws_alb alb
     internal        = "${ var.in_is_internal ? "true" : "false" }"
 
     enable_deletion_protection = false
-    load_balancer_type         = "application"
+    load_balancer_type         = "${var.in_lb_class}"
     idle_timeout               = 60
     ip_address_type            = "ipv4"  # either ipv4 or dualstack (for both IPv4 and IPv6)
 

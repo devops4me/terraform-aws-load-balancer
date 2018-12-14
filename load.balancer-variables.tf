@@ -49,6 +49,18 @@ variable commons
 
 }
 
+
+### ######################## ###
+### [[variable]] in_lb_class ###
+### ######################## ###
+
+variable in_lb_class
+{
+    description = "Either application for a layer 7 load balancer or network for a layer 4 load balancer."
+    default     = "application"
+}
+
+
 ### ######################### ###
 ### [[variable]] in_front_end ###
 ### ######################### ###
