@@ -44,7 +44,7 @@ variable commons
         rabbit = [ "HTTP",  15672, "/#",      "rabbitmq port 15672" ]
         rmqssl = [ "HTTPS", 15671, "/#",      "rmq ssl port 15671"  ]
 
-        amqp   = [ "TCP",   5672,  "/",       "amqp port 5672"      ]
+        amqp   = [ "TCP",   5672,  "",       "amqp port 5672"      ]
 
     }
 
