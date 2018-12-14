@@ -18,7 +18,7 @@
 resource aws_alb alb
 {
     name            = "lb-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
-    security_groups = "${var.in_security_group_ids}"
+    security_groups = [ "${var.in_security_group_ids}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
     internal        = "${ var.in_is_internal ? "true" : "false" }"
 
