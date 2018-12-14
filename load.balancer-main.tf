@@ -89,6 +89,7 @@ resource aws_alb_target_group alb_targets
     vpc_id      = "${ var.in_vpc_id }"
     target_type = "ip"
 
+/*
     health_check
     {
         healthy_threshold   = 3
@@ -99,6 +100,7 @@ resource aws_alb_target_group alb_targets
         port                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
 ################        path                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 2 ) }"
     }
+*/
 
     tags
     {
