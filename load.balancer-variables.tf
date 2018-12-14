@@ -42,8 +42,9 @@ variable commons
         ssl    = [ "HTTPS",   443, "/",       "ssl (tls) port 443"  ]
         etcd   = [ "HTTP",   2379, "/health", "etcd port 2379"      ]
         rabbit = [ "HTTP",  15672, "/#",      "rabbitmq port 15672" ]
-        amqp   = [ "HTTP",  5672,  "/",       "amqp port 5672"      ]
         rmqssl = [ "HTTPS", 15671, "/#",      "rmq ssl port 15671"  ]
+
+        amqp   = [ "TCP",   5672,  "/",       "amqp port 5672"      ]
 
     }
 
