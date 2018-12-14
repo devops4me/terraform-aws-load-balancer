@@ -97,7 +97,7 @@ resource aws_alb_target_group alb_targets
         interval            = 10
         protocol            = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
         port                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
-        path                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 2 ) }"
+################        path                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 2 ) }"
     }
 
     tags
