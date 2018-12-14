@@ -7,6 +7,25 @@
 # = The collections map of common configuration for load balancer
 # = front end listeners and back-end targets.
 # = ===
+
+/*
+ | --
+ | -- On the front end a load balancer listens to http and/or https traffic
+ | -- whilst on the back-end, its tentacles latch onto target groups.
+ | --
+ | -- We vertically read the front-end and back-end configuration.
+ | --
+ | --    in_front_end         = [ "web",    "etcd", "ssl"    ]
+ | --    in_back_end          = [ "rabbit", "etcd", "rmqssl" ]
+ | --
+ | -- In this example (reading column-wise)
+ | --
+ | --   1> listen to http (port 80) traffic and send to rabbitmq (port 15672)
+ | --   2> listen to etcd (port 2379) traffic and send to etcd (port 2379)
+ | --   3> listen to HTTPS (port 443) traffic and send to rabbit (ssl) on 15671
+ | --
+*/
+
 variable commons
 {
     description = "Common load balancer front end listener and backend target configurations."
@@ -19,11 +38,11 @@ variable commons
 	# < ~~~ protocol, port, health url and description ~~~ >
 	# < ~~~ ------------------------------------------ ~~~ >
 
-        web      = [ "HTTP",     80, "/",       "http port 80"        ]
-        ssl      = [ "HTTPS",   443, "/",       "ssl (tls) port 443"  ]
-        etcd     = [ "HTTP",   2379, "/health", "etcd port 2379"      ]
-        rabbitmq = [ "HTTP",  15672, "/#",      "rabbitmq port 15672" ]
-        rmq-ssl  = [ "HTTPS", 15671, "/#",      "rmq ssl port 15671"  ]
+        web    = [ "HTTP",     80, "/",       "http port 80"        ]
+        ssl    = [ "HTTPS",   443, "/",       "ssl (tls) port 443"  ]
+        etcd   = [ "HTTP",   2379, "/health", "etcd port 2379"      ]
+        rabbit = [ "HTTP",  15672, "/#",      "rabbitmq port 15672" ]
+        rmqssl = [ "HTTPS", 15671, "/#",      "rmq ssl port 15671"  ]
 
     }
 

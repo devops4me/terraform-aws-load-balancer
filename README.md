@@ -42,6 +42,46 @@ Traffic can be routed based on the **front-end** host **(aka host based routing)
 
 ---
 
+## Load Balancer Front End and Back End Configuration
+
+ | --
+ | -- On the front end a load balancer listens to http and/or https traffic
+ | -- whilst on the back-end, its tentacles latch onto target groups.
+ | --
+ | -- We vertically read the front-end and back-end configuration.
+ | --
+ | --    in_front_end         = [ "web",    "etcd", "ssl"    ]
+ | --    in_back_end          = [ "rabbit", "etcd", "rmqssl" ]
+ | --
+ | -- In this example (reading column-wise)
+ | --
+ | --   1> listen to http (port 80) traffic and send to rabbitmq (port 15672)
+ | --   2> listen to etcd (port 2379) traffic and send to etcd (port 2379)
+ | --   3> listen to HTTPS (port 443) traffic and send to rabbit (ssl) on 15671
+ | --
+
+
+---
+
+## public or private subnets? which do I use?
+
+**Always use *public subnets* for internet facing load balancers and private subnets for internal load balancers. **
+
+### @todo Create table to document this (two columns and two rows).
+
+### External load balancer | private subnets?
+
+For external load balancers with services in private subnets you use the vpc network module to create **twin public and private subnets** in each availability zone (usually 6). Give the load balancer the public subnets (in the same order) and create services in the private subnets.
+
+### Internal load balancer | private subnets?
+
+### Disallowed
+
+Internal load balancers are not allowed to sit in public subnets and external load balancers are not allowed to sit in private subnets (but the services can).
+
+---
+
+
 ## Important Advice | Public or Private Subnets
 
 Use **public subnet ids** even when the **back-end targets** are in **private subnets** if you want a **public facing load-balancer front-end**. From the browser the load-balancer will just hang if you have used private subnets because you can't connect to a service in private subnets from the outside world.
