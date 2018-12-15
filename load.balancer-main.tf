@@ -9,15 +9,13 @@
  | --
  | -- At its architectural heart the application load balancer is designed
  | -- to separate interface from implementation and it does this serenely
- | -- because it operates at the network layer 4.
- | --
- | -- This is in contrast to a network load balancer which operates
- | -- at the network layer 7.
+ | -- either working at network layer 4 (network load balancer) or layer 7
+ | -- for application load balancers.
  | --
 */
 resource aws_alb alb
 {
-    name            = "lb-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
+    name            = "lb-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ var.in_is_internal ? "x" : "o" }"
     security_groups = [ "${var.in_security_group_ids}" ]
     subnets         = [ "${var.in_subnet_ids}" ]
     internal        = "${ var.in_is_internal ? "true" : "false" }"
@@ -29,10 +27,10 @@ resource aws_alb alb
 
     tags
     {
-        Name = "load-balancer-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ var.in_is_internal ? "x" : "o" }"
-        Class = "${ var.in_ecosystem }"
-        Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
-        Desc   = "This app load balancer for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
+        Name = "load-balancer-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ var.in_is_internal ? "x" : "o" }"
+        Class = "${ var.in_ecosystem_name }"
+        Instance = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
+        Desc   = "This app load balancer for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
     }
 
 }
@@ -57,8 +55,8 @@ resource aws_alb_listener http_listener
     count = "${ length( var.in_front_end ) }"
 
     load_balancer_arn = "${ aws_alb.alb.arn }"
-    port              = "${ element( var.commons[ var.in_front_end[ count.index ] ], 1 ) }"
-    protocol          = "${ element( var.commons[ var.in_front_end[ count.index ] ], 0 ) }"
+    port              = "${ element( var.protocols[ var.in_front_end[ count.index ] ], 1 ) }"
+    protocol          = "${ element( var.protocols[ var.in_front_end[ count.index ] ], 0 ) }"
 
     default_action
     {
@@ -77,37 +75,25 @@ resource aws_alb_listener http_listener
  | -- that clients can call http://rabbitmq.example.com/api and it will be
  | -- translated to http://rabbitmq.example.com:15672/api
  | --
- | -- Notice the interface on port 80 and the implementation on 15672.
+ | -- The interface (for this example) is on port 80 and is separated from
+ | -- the implementation on port 15672.
  | --
 */
 resource aws_alb_target_group alb_targets
 {
     count       = "${ length( var.in_back_end ) }"
-    name        = "${ substr( var.in_lb_class, 0, 3 ) }-${ var.in_ecosystem }${ module.ecosys.out_stamp }${ count.index }"
-    protocol    = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
-    port        = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
+    name        = "${ substr( var.in_lb_class, 0, 3 ) }-${ var.in_ecosystem_name }${ var.in_tag_timestamp }${ count.index }"
+    protocol    = "${ element( var.protocols[ var.in_back_end[ count.index ] ], 0 ) }"
+    port        = "${ element( var.protocols[ var.in_back_end[ count.index ] ], 1 ) }"
     vpc_id      = "${ var.in_vpc_id }"
     target_type = "ip"
 
-/*
-    health_check
-    {
-        healthy_threshold   = 3
-        unhealthy_threshold = 10
-        timeout             = 5
-        interval            = 10
-        protocol            = "${ element( var.commons[ var.in_back_end[ count.index ] ], 0 ) }"
-        port                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 1 ) }"
-################        path                = "${ element( var.commons[ var.in_back_end[ count.index ] ], 2 ) }"
-    }
-*/
-
     tags
     {
-        Name   = "target-group-${ var.in_ecosystem }-${ module.ecosys.out_stamp }-${ count.index }-${ var.in_back_end[ count.index ] }"
-        Class = "${ var.in_ecosystem }"
-        Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
-        Desc   = "This load balancer backend targeting ${ element( var.commons[ var.in_back_end[ count.index ] ], 3 ) } traffic for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
+        Name   = "target-group-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ count.index }-${ var.in_back_end[ count.index ] }"
+        Class = "${ var.in_ecosystem_name }"
+        Instance = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
+        Desc   = "This load balancer backend targeting ${ element( var.protocols[ var.in_back_end[ count.index ] ], 2 ) } traffic for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
     }
 
 }
@@ -138,24 +124,15 @@ resource aws_lb_target_group_attachment connect
 
     target_group_arn = "${ element( aws_alb_target_group.alb_targets.*.arn, 0 ) }"
     target_id        = "${ element( var.in_ip_addresses, count.index ) }"
-    port             = "${ element( var.commons[ var.in_back_end[ 0 ] ], 1 ) }"
+    port             = "${ element( var.protocols[ var.in_back_end[ 0 ] ], 1 ) }"
 }
 
-
-### ################# ###
-### [[module]] ecosys ###
-### ################# ###
-
-module ecosys
-{
-    source = "github.com/devops4me/terraform-aws-stamps"
-}
 
 /*
 resource aws_alb_target_group alb_targets
 {
     count             = "1"
-    name     = "tg-${ var.in_ecosystem }"
+    name     = "tg-${ var.in_ecosystem_name }"
     protocol = "HTTPS"
     port     = "443"
     vpc_id   = "${ var.in_vpc_id }"
@@ -174,10 +151,10 @@ resource aws_alb_target_group alb_targets
 
     tags
     {
-        Name   = "alb-tg-${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
-        Class = "${ var.in_ecosystem }"
-        Instance = "${ var.in_ecosystem }-${ module.ecosys.out_stamp }"
-        Desc   = "This alb target group for ${ var.in_ecosystem } ${ module.ecosys.out_history_note }"
+        Name   = "alb-tg-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
+        Class = "${ var.in_ecosystem_name }"
+        Instance = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
+        Desc   = "This alb target group for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
     }
 
 }

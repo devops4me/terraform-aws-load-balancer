@@ -14,13 +14,13 @@
 # = ===
 module load-balancer-test
 {
-    source               = ".."
-    in_vpc_id            = "${ module.vpc-network.out_vpc_id }"
-    in_subnet_ids        = "${ module.vpc-network.out_subnet_ids }"
-    in_security_group_id = "${ module.security-group.out_security_group_id }"
-    in_ip_addresses      = "${ aws_instance.server.*.private_ip }"
-    in_ip_address_count  = 3
-    in_ecosystem         = "${ local.ecosystem_id }"
+    source                = ".."
+    in_vpc_id             = "${ module.vpc-network.out_vpc_id }"
+    in_subnet_ids         = "${ module.vpc-network.out_subnet_ids }"
+    in_security_group_ids = "${ module.security-group.out_security_group_id }"
+    in_ip_addresses       = "${ aws_instance.server.*.private_ip }"
+    in_ip_address_count   = 3
+    in_ecosystem          = "${ local.ecosystem_id }"
 }
 
 

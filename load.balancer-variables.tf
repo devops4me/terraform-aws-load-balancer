@@ -1,55 +1,7 @@
 
-################ ################################################# ########
-################ Module [[[load balancers]]] Input Variables List. ########
-################ ################################################# ########
-
-# = ===
-# = The collections map of common configuration for load balancer
-# = front end listeners and back-end targets.
-# = ===
-
-/*
- | --
- | -- On the front end a load balancer listens to http and/or https traffic
- | -- whilst on the back-end, its tentacles latch onto target groups.
- | --
- | -- We vertically read the front-end and back-end configuration.
- | --
- | --    in_front_end         = [ "web",    "etcd", "ssl"    ]
- | --    in_back_end          = [ "rabbit", "etcd", "rmqssl" ]
- | --
- | -- In this example (reading column-wise)
- | --
- | --   1> listen to http (port 80) traffic and send to rabbitmq (port 15672)
- | --   2> listen to etcd (port 2379) traffic and send to etcd (port 2379)
- | --   3> listen to HTTPS (port 443) traffic and send to rabbit (ssl) on 15671
- | --
-*/
-
-variable commons
-{
-    description = "Common load balancer front end listener and backend target configurations."
-    type = "map"
-
-    default
-    {
-
-	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
-	# < ~~~ protocol, port, health url and description ~~~ >
-	# < ~~~ ------------------------------------------ ~~~ >
-
-        web    = [ "HTTP",     80, "/",       "http port 80"        ]
-        ssl    = [ "HTTPS",   443, "/",       "ssl (tls) port 443"  ]
-        etcd   = [ "HTTP",   2379, "/health", "etcd port 2379"      ]
-        rabbit = [ "HTTP",  15672, "/#",      "rabbitmq port 15672" ]
-        rmqssl = [ "HTTPS", 15671, "/#",      "rmq ssl port 15671"  ]
-
-        amqp   = [ "TCP",   5672,  "",       "amqp port 5672"      ]
-
-    }
-
-}
-
+################ ################################################ ########
+################ Module [[[load balancers]]] Input Variables List ########
+################ ################################################ ########
 
 ### ######################## ###
 ### [[variable]] in_lb_class ###
@@ -111,7 +63,8 @@ variable in_vpc_id {}
 variable "in_security_group_ids"
 {
     description = "ID of security group that constrains the flow of load balancer traffic."
-    type = "list"
+    type        = "list"
+    default     = []
 }
 
 
@@ -147,12 +100,31 @@ variable in_ip_address_count
 }
 
 
-### ######################### ###
-### [[variable]] in_ecosystem ###
-### ######################### ###
+### ################# ###
+### in_ecosystem_name ###
+### ################# ###
 
-variable in_ecosystem
+variable in_ecosystem_name
 {
-    description = "The name of the class of ecosystem being built like kubernetes-cluster or rabbit-mq"
-    default     = "eco-system"
+    description = "Creational stamp binding all infrastructure components created on behalf of this ecosystem instance."
+}
+
+
+### ################ ###
+### in_tag_timestamp ###
+### ################ ###
+
+variable in_tag_timestamp
+{
+    description = "A timestamp for resource tags in the format ymmdd-hhmm like 80911-1435"
+}
+
+
+### ################## ###
+### in_tag_description ###
+### ################## ###
+
+variable in_tag_description
+{
+    description = "Ubiquitous note detailing who, when, where and why for every infrastructure component."
 }
