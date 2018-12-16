@@ -3,6 +3,12 @@
 ### [[test-module]] testing terraform-aws-load-balancer ###
 ### ################################################### ###
 
+locals
+{
+    ecosystem_id = "balancer-test"
+}
+
+
 # = ===
 # = Test the modern state-of-the-art AWS application load balancer by creating
 # = a number of ec2 instances configured with cloud config and set up to serve
@@ -20,7 +26,11 @@ module load-balancer-test
     in_security_group_ids = "${ module.security-group.out_security_group_id }"
     in_ip_addresses       = "${ aws_instance.server.*.private_ip }"
     in_ip_address_count   = 3
-    in_ecosystem          = "${ local.ecosystem_id }"
+
+    in_ecosystem_name     = "${local.ecosystem_id}"
+    in_tag_timestamp      = "${ module.resource-tags.out_tag_timestamp }"
+    in_tag_description    = "${ module.resource-tags.out_tag_description }"
+
 }
 
 
@@ -56,10 +66,6 @@ module security-group
 }
 
 
-locals
-{
-    ecosystem_id = "lb-test"
-}
 
 
 output dns_name{ value             = "${ module.load-balancer-test.out_dns_name}" }
@@ -174,10 +180,34 @@ data aws_ami ubuntu-1804
     owners = ["099720109477"]
 }
 
-### ################# ###
-### [[module]] ecosys ###
-### ################# ###
 
+/*
+ | --
+ | -- Remember the AWS resource tags! Using this module, every
+ | -- infrastructure component is tagged to tell you 5 things.
+ | --
+ | --   a) who (which IAM user) created the component
+ | --   b) which eco-system instance is this component a part of
+ | --   c) when (timestamp) was this component created
+ | --   d) where (in which AWS region) was this component created
+ | --   e) which eco-system class is this component a part of
+ | --
+*/
+module resource-tags
+{
+    source = "github.com/devops4me/terraform-aws-resource-tags"
+}
+
+
+
+
+### ################################## ###
+### DEPRECATED - decommission me soon. ###
+### DEPRECATED - decommission me soon. ###
+### DEPRECATED - decommission me soon. ###
+### DEPRECATED - decommission me soon. ###
+### DEPRECATED - decommission me soon. ###
+### ################################## ###
 module ecosys
 {
     source = "github.com/devops4me/terraform-aws-stamps"
