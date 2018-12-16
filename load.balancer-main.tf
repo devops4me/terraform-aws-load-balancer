@@ -15,22 +15,22 @@
 */
 resource aws_alb alb
 {
-    name            = "lb-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ var.in_is_internal ? "x" : "o" }"
-    security_groups = [ "${var.in_security_group_ids}" ]
-    subnets         = [ "${var.in_subnet_ids}" ]
-    internal        = "${ var.in_is_internal ? "true" : "false" }"
+    name               = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
+    security_groups    = [ "${var.in_security_group_ids}" ]
+    subnets            = [ "${var.in_subnet_ids}" ]
+    internal           = "${ var.in_is_internal ? "true" : "false" }"
+    load_balancer_type = "${var.in_lb_class}"
 
     enable_deletion_protection = false
-    load_balancer_type         = "${var.in_lb_class}"
     idle_timeout               = 60
-    ip_address_type            = "ipv4"  # either ipv4 or dualstack (for both IPv4 and IPv6)
+    ip_address_type            = "ipv4"
 
     tags
     {
-        Name = "load-balancer-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ var.in_is_internal ? "x" : "o" }"
+        Name = "${var.in_lb_class}-load-balancer-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
         Class = "${ var.in_ecosystem_name }"
         Instance = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
-        Desc   = "This app load balancer for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
+        Desc   = "This ${ var.in_is_internal ? "in" : "ex" }ternal ${var.in_lb_class} load balancer for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
     }
 
 }
