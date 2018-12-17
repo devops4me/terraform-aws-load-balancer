@@ -82,7 +82,7 @@ resource aws_alb_listener http_listener
 resource aws_alb_target_group alb_targets
 {
     count       = "${ length( var.in_back_end ) }"
-    name        = "${ substr( var.in_lb_class, 0, 3 ) }-${ var.in_ecosystem_name }${ var.in_tag_timestamp }${ count.index }"
+    name        = "${ substr( var.in_lb_class, 0, 3 ) }-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
     protocol    = "${ element( var.protocols[ var.in_back_end[ count.index ] ], 0 ) }"
     port        = "${ element( var.protocols[ var.in_back_end[ count.index ] ], 1 ) }"
     vpc_id      = "${ var.in_vpc_id }"
@@ -90,10 +90,10 @@ resource aws_alb_target_group alb_targets
 
     tags
     {
-        Name   = "target-group-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ count.index }-${ var.in_back_end[ count.index ] }"
+        Name   = "target-group-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ count.index }"
         Class = "${ var.in_ecosystem_name }"
         Instance = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
-        Desc   = "This load balancer backend targeting ${ element( var.protocols[ var.in_back_end[ count.index ] ], 2 ) } traffic for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
+        Desc   = "This (${ var.in_lb_class }) load balancer backend targeting ${ element( var.protocols[ var.in_back_end[ count.index ] ], 2 ) } traffic for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
     }
 
 }
