@@ -116,10 +116,10 @@ resource aws_instance server
 
     tags
     {
-        Name   = "ec2-0${ ( count.index + 1 ) }-${ local.ecosystem_id }-${ module.ecosys.out_stamp }"
+        Name   = "ec2-0${ ( count.index + 1 ) }-${ local.ecosystem_id }-${ module.resource-tags.out_tag_timestamp }"
         Class = "${ local.ecosystem_id }"
-        Instance = "${ local.ecosystem_id }-${ module.ecosys.out_stamp }"
-        Desc   = "This ec2 instance no.${ ( count.index + 1 ) } for ${ local.ecosystem_id } ${ module.ecosys.out_history_note }"
+        Instance = "${ local.ecosystem_id }-${ module.resource-tags.out_tag_timestamp }"
+        Desc   = "This ec2 instance no.${ ( count.index + 1 ) } for ${ local.ecosystem_id } ${ module.resource-tags.out_tag_description }"
     }
 
 }
