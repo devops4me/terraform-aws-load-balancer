@@ -48,7 +48,10 @@ module vpc-network
     in_vpc_cidr            = "10.197.0.0/16"
     in_num_private_subnets = 0
     in_num_public_subnets  = 3
-    in_ecosystem           = "${local.ecosystem_id}"
+
+    in_ecosystem_name     = "${local.ecosystem_id}"
+    in_tag_timestamp      = "${ module.resource-tags.out_tag_timestamp }"
+    in_tag_description    = "${ module.resource-tags.out_tag_description }"
 }
 
 
@@ -62,7 +65,10 @@ module security-group
     source         = "github.com/devops4me/terraform-aws-security-group"
     in_ingress     = [ "ssh", "http", "https" ]
     in_vpc_id      = "${ module.vpc-network.out_vpc_id }"
-    in_ecosystem   = "${ local.ecosystem_id }"
+
+    in_ecosystem_name     = "${local.ecosystem_id}"
+    in_tag_timestamp      = "${ module.resource-tags.out_tag_timestamp }"
+    in_tag_description    = "${ module.resource-tags.out_tag_description }"
 }
 
 
@@ -196,19 +202,4 @@ data aws_ami ubuntu-1804
 module resource-tags
 {
     source = "github.com/devops4me/terraform-aws-resource-tags"
-}
-
-
-
-
-### ################################## ###
-### DEPRECATED - decommission me soon. ###
-### DEPRECATED - decommission me soon. ###
-### DEPRECATED - decommission me soon. ###
-### DEPRECATED - decommission me soon. ###
-### DEPRECATED - decommission me soon. ###
-### ################################## ###
-module ecosys
-{
-    source = "github.com/devops4me/terraform-aws-stamps"
 }
