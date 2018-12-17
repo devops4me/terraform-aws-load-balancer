@@ -93,7 +93,7 @@ resource aws_alb_target_group alb_targets
         Name   = "target-group-${ var.in_ecosystem_name }-${ var.in_tag_timestamp }-${ count.index }"
         Class = "${ var.in_ecosystem_name }"
         Instance = "${ var.in_ecosystem_name }-${ var.in_tag_timestamp }"
-        Desc   = "This (${ var.in_lb_class }) load balancer backend targeting ${ element( var.protocols[ var.in_back_end[ count.index ] ], 2 ) } traffic for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
+        Desc   = "This ${ var.in_lb_class } load balancer backend targeting ${ element( var.protocols[ var.in_back_end[ count.index ] ], 2 ) } traffic for ${ var.in_ecosystem_name } ${ var.in_tag_description }"
     }
 
 }
