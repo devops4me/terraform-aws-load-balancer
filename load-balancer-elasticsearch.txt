@@ -1,0 +1,102 @@
+
+#### --> @todo ~> use example methods to create an S3 bucket (and allow it to be destroyed) with stamp naming
+
+
+### ################### ###
+### [[resource]] aws_lb ###
+### ################### ###
+
+resource "aws_alb" "load-balancer-xyz"
+{
+    name               = "lb-gilbert-111"
+    internal           = false
+    load_balancer_type = "application"
+    security_groups    = [ "sg-0baa7e33b000fd97c" ]
+    subnets            = [ "subnet-00f7356bcdbbbe344", "subnet-07e1fd9c8ac0e7386" ]
+
+    enable_deletion_protection = false
+
+# ----->    access_logs
+# ----->    {
+# ----->        bucket  = "pot.devopswiki.access.logs"
+# ----->        prefix  = "production"
+# ----->        enabled = true
+# ----->        interval  = 60
+# ----->    }
+
+    tags
+    {
+        Name = "app-lb-gilbert-111"
+	Group = "gilbert-111"
+    }
+}
+
+
+resource "aws_alb_listener" "alb_listener"
+{
+    load_balancer_arn = "${aws_alb.load-balancer-xyz.arn}"
+    port              = "443"
+    protocol          = "HTTPS"
+
+    default_action
+    {
+        target_group_arn =  "arn:aws:es:eu-west-1:120725610885:domain/es-cloud-18234-1752-407"
+        type             = "forward"
+    }
+}
+
+
+# -----@--@-->resource "aws_alb_target_group" "alb_target_group"
+# -----@--@-->{
+# -----@--@-->    name     = "alb-target-grp-name-111"
+# -----@--@-->    port     = "443"
+# -----@--@-->    protocol = "HTTPS"
+# -----@--@-->    vpc_id   = "vpc-09392ff060cba3535"
+
+# -----@--@-->    tags
+# -----@--@-->    {
+# -----@--@-->        name  = "alb-gilbert-target-grp-111"
+# -----@--@-->	Group = "trial-aaa-at-111"
+# -----@--@-->    }
+# -----@--@-->}
+
+
+resource "aws_lb_target_group" "this"
+{
+    name = "alb-target-group-gb-111"
+    port = 443
+    protocol = "HTTPS"
+    vpc_id   = "vpc-09392ff060cba3535"
+
+    health_check
+    {
+        interval = 5
+        path = "/check"
+        port = 443
+protocol = "HTTPS"
+timeout = 3
+healthy_threshold = 3
+unhealthy_threshold = 5
+matcher = "200"
+}
+}
+
+resource "aws_alb_listener_rule" "listener_rule"
+{
+################    depends_on   = ["aws_alb_target_group.alb_target_group"]
+    listener_arn = "${aws_alb_listener.alb_listener.arn}"
+################priority     = "${var.priority}"
+    action
+    {
+        type             = "forward"
+####        target_group_arn = "arn:aws:elasticloadbalancing:eu-west-1:120725610885:targetgroup/alb-target-grp-name-111/54b3ea13dbe7918e"
+####        target_group_arn = "arn:aws:elasticloadbalancing:eu-west-1:120725610885:targetgroup/alb-target-grp-name-111/54b3ea13dbe7918e"
+        target_group_arn = "arn:aws:elasticloadbalancing:eu-west-1:120725610885:targetgroup"
+    }
+
+    condition
+    {
+        field = "path-pattern"
+        values = ["/*"]
+    }
+}

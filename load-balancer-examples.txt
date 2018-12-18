@@ -1,0 +1,437 @@
+
+
+resource "aws_lb_listener_certificate" "url2_valouille_fr" {
+  listener_arn    = "${aws_alb_listener.alb_front_https.arn}"
+  certificate_arn = "${aws_iam_server_certificate.url2_valouille_fr.arn}"
+}
+resource "aws_lb_listener_certificate" "url3_valouille_fr" {
+  listener_arn    = "${aws_alb_listener.alb_front_https.arn}"
+  certificate_arn = "${aws_iam_server_certificate.url3_valouille_fr.arn}"
+}
+
+
+resource "aws_alb_listener" "alb_front_https" {
+	load_balancer_arn	=	"${aws_alb.alb_front.arn}"
+	port			=	"443"
+	protocol		=	"HTTPS"
+	ssl_policy		=	"ELBSecurityPolicy-2016-08"
+	certificate_arn		=	"${aws_iam_server_certificate.url1_valouille_fr.arn}"
+	default_action {
+		target_group_arn	=	"${aws_alb_target_group.alb_front_https.arn}"
+		type			=	"forward"
+	}
+}
+
+
+resource "aws_alb_target_group_attachment" "alb_backend-01_http" {
+  target_group_arn = "${aws_alb_target_group.alb_front_https.arn}"
+  target_id        = "${aws_instance.backend-01.id}"
+  port             = 80
+}
+resource "aws_alb_target_group_attachment" "alb_backend-02_http" {
+  target_group_arn = "${aws_alb_target_group.alb_front_https.arn}"
+  target_id        = "${aws_instance.backend-01.id}"
+  port             = 80
+}
+
+
+resource "aws_alb_target_group" "alb_front_https" {
+	name	= "alb-front-https"
+	vpc_id	= "${var.vpc_id}"
+	port	= "443"
+	protocol	= "HTTPS"
+	health_check {
+                path = "/healthcheck"
+                port = "80"
+                protocol = "HTTP"
+                healthy_threshold = 2
+                unhealthy_threshold = 2
+                interval = 5
+                timeout = 4
+                matcher = "200-308"
+        }
+}
+
+
+resource "aws_alb" "alb_front" {
+	name		=	"front-alb"
+	internal	=	false
+	security_groups	=	["${aws_security_group.traffic-in.id}"]
+	subnets		=	["${aws_subnet.public-1a.id}", "${aws_subnet.public-1b.id}"]
+	enable_deletion_protection	=	true
+}
+
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+
+
+
+data "aws_caller_identity" "current" {}
+
+data "aws_availability_zones" "available" {}
+
+data "aws_region" "current" {}
+
+variable "log_location_prefix" {
+  default = "my-lb-logs"
+}
+
+variable "region" {
+  default = "us-west-2"
+}
+
+variable "log_bucket_name" {
+  default = "test-log-bucket"
+}
+
+data "aws_elb_service_account" "main" {}
+
+resource "aws_s3_bucket" "log_bucket" {
+  bucket        = "${local.log_bucket_name}"
+  policy        = "${data.aws_iam_policy_document.bucket_policy.json}"
+  force_destroy = true
+  tags          = "${local.tags}"
+
+  lifecycle_rule {
+    id      = "log-expiration"
+    enabled = "true"
+
+    expiration {
+      days = "7"
+    }
+  }
+}
+data "aws_iam_policy_document" "bucket_policy" {
+  statement {
+    sid       = "AllowToPutLoadBalancerLogsToS3Bucket"
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::${local.log_bucket_name}/${var.log_location_prefix}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_elb_service_account.main.id}:root"]
+    }
+  }
+}
+
+
+provider "random"
+{
+version = "= 1.1.0"
+}
+
+resource "random_string" "suffix"
+{
+length  = 8
+special = false
+}
+
+
+
+
+resource "aws_lb" "application" {
+  load_balancer_type               = "application"
+  name                             = "${var.load_balancer_name}"
+  internal                         = "${var.load_balancer_is_internal}"
+  security_groups                  = ["${var.security_groups}"]
+  subnets                          = ["${var.subnets}"]
+  idle_timeout                     = "${var.idle_timeout}"
+  enable_cross_zone_load_balancing = "${var.enable_cross_zone_load_balancing}"
+  enable_deletion_protection       = "${var.enable_deletion_protection}"
+  enable_http2                     = "${var.enable_http2}"
+  ip_address_type                  = "${var.ip_address_type}"
+  tags                             = "${merge(var.tags, map("Name", var.load_balancer_name))}"
+
+  access_logs {
+    enabled = true
+    bucket  = "${var.log_bucket_name}"
+    prefix  = "${var.log_location_prefix}"
+  }
+
+  timeouts {
+    create = "${var.load_balancer_create_timeout}"
+    delete = "${var.load_balancer_delete_timeout}"
+    update = "${var.load_balancer_update_timeout}"
+  }
+
+  count = "${var.logging_enabled ? 1 : 0}"
+}
+
+resource "aws_lb_target_group" "main" {
+  name                 = "${lookup(var.target_groups[count.index], "name")}"
+  vpc_id               = "${var.vpc_id}"
+  port                 = "${lookup(var.target_groups[count.index], "backend_port")}"
+  protocol             = "${upper(lookup(var.target_groups[count.index], "backend_protocol"))}"
+  deregistration_delay = "${lookup(var.target_groups[count.index], "deregistration_delay", lookup(var.target_groups_defaults, "deregistration_delay"))}"
+  target_type          = "${lookup(var.target_groups[count.index], "target_type", lookup(var.target_groups_defaults, "target_type"))}"
+
+  health_check {
+    interval            = "${lookup(var.target_groups[count.index], "health_check_interval", lookup(var.target_groups_defaults, "health_check_interval"))}"
+    path                = "${lookup(var.target_groups[count.index], "health_check_path", lookup(var.target_groups_defaults, "health_check_path"))}"
+    port                = "${lookup(var.target_groups[count.index], "health_check_port", lookup(var.target_groups_defaults, "health_check_port"))}"
+    healthy_threshold   = "${lookup(var.target_groups[count.index], "health_check_healthy_threshold", lookup(var.target_groups_defaults, "health_check_healthy_threshold"))}"
+    unhealthy_threshold = "${lookup(var.target_groups[count.index], "health_check_unhealthy_threshold", lookup(var.target_groups_defaults, "health_check_unhealthy_threshold"))}"
+    timeout             = "${lookup(var.target_groups[count.index], "health_check_timeout", lookup(var.target_groups_defaults, "health_check_timeout"))}"
+    protocol            = "${upper(lookup(var.target_groups[count.index], "healthcheck_protocol", lookup(var.target_groups[count.index], "backend_protocol")))}"
+    matcher             = "${lookup(var.target_groups[count.index], "health_check_matcher", lookup(var.target_groups_defaults, "health_check_matcher"))}"
+  }
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = "${lookup(var.target_groups[count.index], "cookie_duration", lookup(var.target_groups_defaults, "cookie_duration"))}"
+    enabled         = "${lookup(var.target_groups[count.index], "stickiness_enabled", lookup(var.target_groups_defaults, "stickiness_enabled"))}"
+  }
+
+  tags       = "${merge(var.tags, map("Name", lookup(var.target_groups[count.index], "name")))}"
+  count      = "${var.logging_enabled ? var.target_groups_count : 0}"
+  depends_on = ["aws_lb.application"]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_lb_listener" "frontend_http_tcp" {
+  load_balancer_arn = "${element(concat(aws_lb.application.*.arn, aws_lb.application_no_logs.*.arn), 0)}"
+  port              = "${lookup(var.http_tcp_listeners[count.index], "port")}"
+  protocol          = "${lookup(var.http_tcp_listeners[count.index], "protocol")}"
+  count             = "${var.logging_enabled ? var.http_tcp_listeners_count : 0}"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.main.*.id[lookup(var.http_tcp_listeners[count.index], "target_group_index", 0)]}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener" "frontend_https" {
+  load_balancer_arn = "${element(concat(aws_lb.application.*.arn, aws_lb.application_no_logs.*.arn), 0)}"
+  port              = "${lookup(var.https_listeners[count.index], "port")}"
+  protocol          = "HTTPS"
+  certificate_arn   = "${lookup(var.https_listeners[count.index], "certificate_arn")}"
+  ssl_policy        = "${lookup(var.https_listeners[count.index], "ssl_policy", var.listener_ssl_policy_default)}"
+  count             = "${var.logging_enabled ? var.https_listeners_count : 0}"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.main.*.id[lookup(var.https_listeners[count.index], "target_group_index", 0)]}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener_certificate" "https_listener" {
+  listener_arn    = "${aws_lb_listener.frontend_https.*.arn[lookup(var.extra_ssl_certs[count.index], "https_listener_index")]}"
+  certificate_arn = "${lookup(var.extra_ssl_certs[count.index], "certificate_arn")}"
+  count           = "${var.logging_enabled ? var.extra_ssl_certs_count : 0}"
+}
+
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+
+
+### ################### ###
+### [[resource]] aws_lb ###
+### ################### ###
+
+resource "aws_lb" "test"
+{
+name               = "test-lb-tf"
+internal           = false
+load_balancer_type = "application"
+security_groups    = ["${aws_security_group.lb_sg.id}"]
+subnets            = ["${aws_subnet.public.*.id}"]
+
+enable_deletion_protection = true
+
+access_logs
+{
+bucket  = "${aws_s3_bucket.lb_logs.bucket}"
+prefix  = "test-lb"
+enabled = true
+}
+tags
+{
+Environment = "production"
+}
+}
+
+resource "aws_alb" "alb"
+{
+name            = "${var.alb_name}"
+subnets         = ["${split(",",var.alb_subnets)}"]
+security_groups = ["${split(",", var.alb_security_groups)}"]
+internal        = "${var.internal_alb}"
+idle_timeout    = "${var.idle_timeout}"
+tags
+{
+Name    = "${var.alb_name}"
+}
+access_logs
+{
+bucket = "${var.s3_bucket}"
+prefix = "ELB-logs"
+}
+}
+
+
+resource "aws_alb_listener" "alb_listener"
+{
+load_balancer_arn = "${aws_alb.alb.arn}"
+port              = "${var.alb_listener_port}"
+protocol          = "${var.alb_listener_protocol}"
+
+default_action
+{
+target_group_arn = "${aws_alb_target_group.alb_target.arn}"
+type             = "forward"
+}
+}
+
+resource "aws_alb_listener_rule" "listener_rule"
+{
+depends_on   = ["aws_alb_target_group.alb_target_group"]
+listener_arn = "${aws_alb_listener.alb_listener.arn}"
+priority     = "${var.priority}"
+action
+{
+type             = "forward"
+target_group_arn = "${aws_alb_target_group.alb_target_group.id}"
+}
+condition
+{
+field  = "path-pattern"
+values = ["${var.alb_path}"]
+}
+}
+
+
+resource "aws_alb_target_group" "alb_target_group"
+{
+name     = "${var.target_group_name}"
+port     = "${var.svc_port}"
+protocol = "HTTP"
+vpc_id   = "${var.vpc_id}"
+tags
+{
+name = "${var.target_group_name}"
+}
+stickiness{
+type            = "lb_cookie"
+cookie_duration = 1800
+enabled         = "${var.target_group_sticky}"
+}
+health_check
+{
+healthy_threshold   = 3
+unhealthy_threshold = 10
+timeout             = 5
+interval            = 10
+path                = "${var.target_group_path}"
+port                = "${var.target_group_port}"
+}
+}
+
+
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+
+
+
+name - (Optional) The name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with tf-lb.
+name_prefix - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with name.
+internal - (Optional) If true, the LB will be internal.
+load_balancer_type - (Optional) The type of load balancer to create. Possible values are application or network. The default value is application.
+security_groups - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type application.
+access_logs - (Optional) An Access Logs block. Access Logs documented below. Only valid for Load Balancers of type application.
+subnets - (Optional) A list of subnet IDs to attach to the LB. Subnets cannot be updated for Load Balancers of type network. Changing this value for load balancers of type network will force a recreation of the resource.
+subnet_mapping - (Optional) A subnet mapping block as documented below.
+idle_timeout - (Optional) The time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type application. Default: 60.
+enable_deletion_protection - (Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer. Defaults to false.
+enable_cross_zone_load_balancing - (Optional) If true, cross-zone load balancing of the load balancer will be enabled. This is a network load balancer feature. Defaults to false.
+enable_http2 - (Optional) Indicates whether HTTP/2 is enabled in application load balancers. Defaults to true.
+ip_address_type - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are ipv4 and dualstack
+tags - (Optional) A mapping of tags to assign to the resource.
+NOTE:: Please note that internal LBs can only use ipv4 as the ip_address_type. You can only change to dualstack ip_address_type if the selected subnets are IPv6 enabled.
+
+Access Logs (access_logs) support the following:
+
+bucket - (Required) The S3 bucket name to store the logs in.
+prefix - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
+enabled - (Optional) Boolean to enable / disable access_logs. Defaults to false, even when bucket is specified.
+Subnet Mapping (subnet_mapping) blocks support the following:
+
+subnet_id - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
+allocation_id - (Optional) The allocation ID of the Elastic IP address.
+
+
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+
+
+resource "aws_elb" "load-balancer"
+{
+    count = "0"
+
+    # -- Pass in only one or the other
+    # -- of subnets and availability zones
+    # -- (never both).
+
+    name             = "lb-${var.in_eco_stamp}"
+    security_groups  = [ "${var.in_sgroup_ids}" ]
+    subnets          = [ "${var.in_subnet_ids}" ]
+    idle_timeout     = 400
+################    instances          = [ "${aws_instance.ec2-network-18240-0944-099-thinkpad-io.id}" ]
+
+    listener
+    {
+        instance_port     = 443
+        instance_protocol = "https"
+        lb_port           = 443
+        lb_protocol       = "https"
+    }
+
+
+    listener
+    {
+        instance_port      = 443
+        instance_protocol  = "https"
+        lb_port            = 443
+        lb_protocol        = "https"
+##########################        ssl_certificate_id = "@[(ssl.cert.id)]"
+    }
+
+
+    health_check
+    {
+        healthy_threshold   = 2
+        unhealthy_threshold = 2
+        timeout             = 3
+        target              = "HTTPS:443/"
+        interval            = 30
+    }
+
+# -------->    access_logs
+# -------->    {
+# -------->        bucket        = "pot.devopswiki.access.logs"
+# -------->        bucket_prefix = "production"
+# -------->        interval      = 60
+# -------->    }
+
+    tags
+    {
+        Name = "lb-${var.in_eco_stamp}"
+	Group = "${var.in_eco_stamp}"
+    }
+
+}
+
+
+########################################################################################################################################
+########################################################################################################################################
+########################################################################################################################################
+
