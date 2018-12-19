@@ -38,7 +38,7 @@ variable protocols
 	# < ~~~ ------------------------------------------------------ ~~~ >
 
         http     = [ "HTTP" ,     80,  "http port 80"        ]
-        https    = [ "HTTPS",    443,  "ssl (tls) port 443"  ]
+        https    = [ "HTTPS",    443,  "ssl on port 443"     ]
         etcd     = [ "HTTP" ,   2379,  "etcd port 2379"      ]
         rabbitmq = [ "HTTP" ,  15672,  "rabbitmq port 15672" ]
         rmq-ssl  = [ "HTTPS",  15671,  "rmq ssl port 15671"  ]
