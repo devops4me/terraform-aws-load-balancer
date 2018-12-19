@@ -13,14 +13,14 @@
  | -- Example - Human traffic from port 80 to RabbitMQ UI port 15672
  | --           (application load balancer)
  | --
- | --    in_front_end = [ "web"    ]
+ | --    in_front_end = [ "http"    ]
  | --    in_back_end  = [ "rabbit" ]
  | --
  | --
  | -- Example - Machine AMQP (tcp) traffic from/to port 5672
  | --           (network load balancer)
  | --
- | --    in_front_end = [ "web"    ]
+ | --    in_front_end = [ "http"    ]
  | --    in_back_end  = [ "rabbit" ]
  | --
 */
@@ -37,8 +37,8 @@ variable protocols
 	# < ~~~ human (http/https) application load balancer interface ~~~ >
 	# < ~~~ ------------------------------------------------------ ~~~ >
 
-        web      = [ "HTTP" ,     80,  "http port 80"        ]
-        ssl      = [ "HTTPS",    443,  "ssl (tls) port 443"  ]
+        http     = [ "HTTP" ,     80,  "http port 80"        ]
+        https    = [ "HTTPS",    443,  "ssl (tls) port 443"  ]
         etcd     = [ "HTTP" ,   2379,  "etcd port 2379"      ]
         rabbitmq = [ "HTTP" ,  15672,  "rabbitmq port 15672" ]
         rmq-ssl  = [ "HTTPS",  15671,  "rmq ssl port 15671"  ]
