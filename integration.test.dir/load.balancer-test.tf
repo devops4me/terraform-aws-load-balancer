@@ -27,6 +27,9 @@ module load-balancer-test
     in_ip_addresses       = "${ aws_instance.server.*.private_ip }"
     in_ip_address_count   = 3
 
+    in_front_end          = [ "http" ]
+    in_back_end           = [ "https" ]
+
     in_ecosystem_name     = "${local.ecosystem_id}"
     in_tag_timestamp      = "${ module.resource-tags.out_tag_timestamp }"
     in_tag_description    = "${ module.resource-tags.out_tag_description }"
