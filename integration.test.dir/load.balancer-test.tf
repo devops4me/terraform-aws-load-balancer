@@ -82,6 +82,8 @@ output public_ip_addresses{ value  = "${ aws_instance.server.*.public_ip }" }
 output private_ip_addresses{ value = "${ aws_instance.server.*.private_ip }" }
 
 
+
+
 ## @todo - migrate the below to its own module
 ## @todo - migrate the below to its own module
 ## @todo - migrate the below to its own module

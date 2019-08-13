@@ -25,13 +25,12 @@
  | --
 */
 
-variable protocols
-{
+variable protocols {
+
     description = "Load balancer protocols for front and back end traffic."
     type = "map"
 
-    default
-    {
+    default {
 
 	# < ~~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ~~~ >
 	# < ~~~ human (http/https) application load balancer interface ~~~ >
